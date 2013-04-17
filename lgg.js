@@ -23,20 +23,27 @@ $(function() {
   }
 
   for (var i = drawings.length-1; i >= 0; i--) {
-    drawings[i].clear('#888888');
+    drawings[i].clear('#dddddd');
   }
 });
 
 /* Drawing object */
 function Drawing(canvas, textfield) {
-  textfield.width(canvas.width());
+  textfield.width(canvas.width() - (parseInt(textfield.css('padding'))*2));
 
   this.context = canvas[0].getContext('2d');
-  this.canvas = canvas;
   this.textfield = textfield;
+
+  this.textfield.keypress(this.makeTextChangeHandler());
 }
 
 Drawing.prototype.clear = function(hexcolor) {
   this.context.fillStyle = hexcolor;
-  this.context.fillRect(0, 0, this.context.width, this.context.height);
+  this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+}
+
+Drawing.prototype.makeTextChangeHandler = function() {
+  return function(eventObject) {
+    alert(this.value);
+  }
 }
