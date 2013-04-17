@@ -34,7 +34,7 @@ function Drawing(canvas, textfield) {
   this.context = canvas[0].getContext('2d');
   this.textfield = textfield;
 
-  this.textfield.keypress(this.makeTextChangeHandler());
+  this.textfield.keyup(this.makeTextChangeHandler());
 }
 
 Drawing.prototype.clear = function(hexcolor) {
