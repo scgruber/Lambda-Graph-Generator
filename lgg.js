@@ -23,6 +23,8 @@ $(function() {
   }
 
   for (var i = drawings.length-1; i >= 0; i--) {
+    drawings[i].tokens.produceDrawing(drawings[i].root);
+    drawings[i].update();
     drawings[i].display();
   }
 });
@@ -46,12 +48,18 @@ function Drawing(i, canvas, textfield) {
   this.textfield.keyup(this.makeTextChangeHandler(i));
 }
 
+Drawing.prototype.update = function() {
+  this.root.update();
+}
+
 Drawing.prototype.display = function() {
   this.clear('#ffffff');
 
   this.context.translate(this.width/2, this.height/2);
 
   this.root.display(this.context);
+
+  this.context.translate(-this.width/2, -this.height/2);
 }
 
 Drawing.prototype.clear = function(hexcolor) {
@@ -62,6 +70,9 @@ Drawing.prototype.clear = function(hexcolor) {
 Drawing.prototype.makeTextChangeHandler = function(i) {
   return function(eventObject) {
     drawings[i].regenerateTokens(this.value);
+    drawings[i].tokens.produceDrawing(drawings[i].root);
+    drawings[i].update();
+    drawings[i].display();
   }
 }
 
@@ -197,20 +208,125 @@ TokenString.prototype.makeSingleton = function() {
   }
 }
 
+TokenString.prototype.produceDrawing = function(grp) {
+  if (this.child == null) {
+    throw(new Error("Cannot draw a childless root!"));
+  }
+
+  var nextToken = this.next;
+  for (var i = 0; i < this.val.length; i++) {
+    var input = new Input(this.val[i]);
+    if (nextToken != null) {
+      var arg = new Group(grp.parent);
+      nextToken.makeSingleton().produceDrawing(arg);
+      nextToken = nextToken.next;
+      input.setGroup(arg);
+    }
+    grp.inputs.push(input);
+  }
+
+  var nextChild = this.child;
+  var appTo = null;
+  while (nextChild != null) {
+    if (nextChild.child == null) {
+      /* Application node */
+      nextChild = nextChild.next;
+    } else {
+      /* Group node */
+      nextChild = nextChild.next;
+    }
+  }
+
+  return nextToken;
+}
+
 
 /****************
  * Group object *
  ****************/
 function Group(parent) {
-  this.parent = parent;
-
   this.x = 0;
   this.y = 0;
-  this.r = 10;
+  this.r = 25;
+
+  this.parent = parent;
+  this.inputs = [];
+  this.interior = [];
+  this.groups = [];
+  this.output = new Output(this.r);
+}
+
+Group.prototype.update = function() {
+  this.r = 25;
+
+  /* Update inputs */
+  for (var i = 0; i < this.inputs.length; i++) {
+    this.inputs[i].x = this.x + (this.r*Math.cos((i+1)*Math.PI/(i+2)));
+    this.inputs[i].y = this.y - (this.r*Math.sin((i+1)*Math.PI/(i+2)));
+  }
+
+  /* Update output */
+  this.output.y = this.r;
 }
 
 Group.prototype.display = function(ctx) {
   ctx.beginPath();
   ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
   ctx.stroke();
+
+  for (var i = 0; i < this.inputs.length; i++) {
+    this.inputs[i].display(ctx);
+  }
+
+  this.output.display(ctx);
+}
+
+
+/****************
+ * Input object *
+ ****************/
+function Input(arg) {
+  this.x = 0;
+  this.y = 0;
+  this.r = 10;
+
+  this.arg = arg;
+  this.group = null;
+}
+
+Input.prototype.fillColor = '#ffffff';
+Input.prototype.strokeColor = '#000000';
+
+Input.prototype.display = function(ctx) {
+  ctx.fillStyle = this.fillColor;
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
+  ctx.fill();
+
+  ctx.strokeStyle = this.strokeColor;
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
+  ctx.stroke();
+}
+
+Input.prototype.setGroup = function(grp) {
+  this.group = grp;
+}
+
+
+/*****************
+ * Output object *
+ *****************/
+function Output(radius) {
+  this.x = 0;
+  this.y = radius;
+}
+
+Output.prototype.fillColor = '#000000';
+
+Output.prototype.display = function(ctx) {
+  ctx.fillStyle = this.fillColor;
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, 5, 0, 2*Math.PI);
+  ctx.fill();
 }
