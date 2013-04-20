@@ -176,3 +176,11 @@ TokenString.prototype.toString = function() {
 
   return out;
 }
+
+TokenString.prototype.makeSingleton = function() {
+  return {
+    val: this.val,
+    next: null,
+    child: this.child
+  }
+}
