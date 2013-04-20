@@ -151,5 +151,25 @@ function TokenString(str) {
   } else {
     throw "Unexpected symbol at start of string!";
   }
+}
 
+TokenString.prototype.toString = function() {
+  var out = '';
+  if (child != null) {
+    out += '(';
+    if (val != '') {
+      /* Abstraction */
+      out += '\\' + val + '.';
+    }
+    out += child.toString();
+    out += ')';
+  } else {
+    out += val;
+  }
+
+  if (next != null) {
+    out += next.toString();
+  }
+
+  return out;
 }
