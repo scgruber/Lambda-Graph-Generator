@@ -24,8 +24,7 @@ $(function() {
 
   for (var i = drawings.length-1; i >= 0; i--) {
     drawings[i].tokens.produceDrawing(drawings[i].root);
-    drawings[i].update();
-    drawings[i].display();
+    drawings[i].exec();
   }
 });
 
@@ -48,6 +47,12 @@ function Drawing(i, canvas, textfield) {
   this.textfield.keyup(this.makeTextChangeHandler(i));
 }
 
+Drawing.prototype.exec = function() {
+  resetTransform(this.context);
+  this.update();
+  this.display();
+}
+
 Drawing.prototype.update = function() {
   this.root.update();
 }
@@ -63,6 +68,7 @@ Drawing.prototype.display = function() {
 }
 
 Drawing.prototype.clear = function(hexcolor) {
+  this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
   this.context.fillStyle = hexcolor;
   this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
 }
@@ -71,14 +77,14 @@ Drawing.prototype.makeTextChangeHandler = function(i) {
   return function(eventObject) {
     drawings[i].regenerateTokens(this.value);
     drawings[i].tokens.produceDrawing(drawings[i].root);
-    drawings[i].update();
-    drawings[i].display();
+    drawings[i].exec();
   }
 }
 
 Drawing.prototype.regenerateTokens = function(str) {
   try {
-    var newTokens = new TokenString(str);
+    var newTokens = new TokenString();
+    newTokens.parseString(str);
     this.tokens = newTokens;
     this.setValid();
   } catch(err) {
@@ -99,7 +105,13 @@ Drawing.prototype.setInvalid = function() {
 /**********************
  * TokenString object *
  **********************/
-function TokenString(str) {
+function TokenString() {
+  this.val = '';
+  this.next = null;
+  this.child = null;
+}
+
+TokenString.prototype.parseString = function(str) {
   this.val = '';
   this.next = null;
   this.child = null;
@@ -138,11 +150,13 @@ function TokenString(str) {
       var finishIndex = i;
       childStr = str.substring(startIndex, finishIndex-1);
       if (childStr.length > 0) {
-        this.child = new TokenString(childStr);
+        this.child = new TokenString();
+        this.child.parseString(childStr);
       }
       nextStr = str.substring(finishIndex);
       if (nextStr.length > 0) {
-        this.next = new TokenString(nextStr);
+        this.next = new TokenString();
+        this.next.parseString(nextStr);
       }
     } else {
       /* Group */
@@ -160,19 +174,22 @@ function TokenString(str) {
       var finishIndex = i;
       childStr = str.substring(startIndex, finishIndex-1);
       if (childStr.length > 0) {
-        this.child = new TokenString(childStr);
+        this.child = new TokenString();
+        this.child.parseString(childStr);
       }
       nextStr = str.substring(finishIndex);
       if (nextStr.length > 0) {
-        this.next = new TokenString(nextStr);
+        this.next = new TokenString();
+        this.next.parseString(nextStr);
       }
     }
-  } else if ((65 <= str.charCodeAt(0) && str.charCodeAt(0) <= 90) || (97 <= str.charCodeAt(0) && str.charCodeAt(0) <= 122)) {
+  } else if (isAlpha(str[0])) {
     /* Some valid character found */
     this.val = str[0];
     nextStr = str.substring(1);
     if (nextStr.length > 0) {
-      this.next = new TokenString(nextStr);
+      this.next = new TokenString();
+      this.next.parseString(nextStr);
     }
   } else {
     throw(new Error("Unexpected symbol at start of string!"));
@@ -201,14 +218,17 @@ TokenString.prototype.toString = function() {
 }
 
 TokenString.prototype.makeSingleton = function() {
-  return {
-    val: this.val,
-    next: null,
-    child: this.child
-  }
+  var singleton = new TokenString();
+  singleton.val = this.val;
+  singleton.next = null;
+  singleton.child = this.child;
+  return singleton;
 }
 
 TokenString.prototype.produceDrawing = function(grp) {
+  /* Clean out the existing group data */
+  grp.clean();
+
   if (this.child == null) {
     throw(new Error("Cannot draw a childless root!"));
   }
@@ -250,6 +270,17 @@ function Group(parent) {
   this.r = 25;
 
   this.parent = parent;
+  this.inputs = [];
+  this.interior = [];
+  this.groups = [];
+  this.output = new Output(this.r);
+}
+
+Group.prototype.clean = function() {
+  this.x = 0;
+  this.y = 0;
+  this.r = 25;
+  
   this.inputs = [];
   this.interior = [];
   this.groups = [];
