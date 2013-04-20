@@ -37,6 +37,8 @@ function Drawing(i, canvas, textfield) {
   this.context = canvas[0].getContext('2d');
   this.textfield = textfield;
 
+  this.regenerateTokens(textfield.val());
+
   this.textfield.keyup(this.makeTextChangeHandler(i));
 }
 
@@ -57,6 +59,7 @@ Drawing.prototype.regenerateTokens = function(str) {
     this.tokens = newTokens;
     this.setValid();
   } catch(err) {
+    console.warn(err.message);
     this.setInvalid();
   }
 }
@@ -79,31 +82,31 @@ function TokenString(str) {
   this.child = null;
 
   if (str == '') {
-    throw "Empty string passed to constructor!";
+    throw(new Error("Empty string passed to constructor!"));
   }
 
   if (str[0] == '(') {
     /* Enter into a group */
     if (str.length == 1) {
-      throw "Unbounded group!"
+      throw(new Error("Unbounded group!"));
     } else if (str[1] == '\\') {
       /* Lambda abstraction */
       var i = 2;
       if (i >= str.length) {
-        throw "Abstraction has no arguments";
+        throw(new Error("Abstraction has no arguments"));
       }
       while (str[i] != '.') {
         this.val += str[i];
         i++;
         if (i == str.length) {
-          throw "Abstraction has no dot";
+          throw(new Error("Abstraction has no dot"));
         }
       }
       var startIndex = ++i;
       var depth = 1;
       while (depth > 0) {
         if (i == str.length) {
-          throw "Mismatched parentheses";
+          throw(new Error("Mismatched parentheses"));
         }
         if (str[i] == '(') depth++;
         else if (str[i] == ')') depth--;
@@ -125,7 +128,7 @@ function TokenString(str) {
       var depth = 1;
       while (depth > 0) {
         if (i == str.length) {
-          throw "Mismatched parentheses";
+          throw(new Error("Mismatched parentheses"));
         }
         if (str[i] == '(') depth++;
         else if (str[i] == ')') depth--;
@@ -149,7 +152,7 @@ function TokenString(str) {
       this.next = new TokenString(nextStr);
     }
   } else {
-    throw "Unexpected symbol at start of string!";
+    throw(new Error("Unexpected symbol at start of string!"));
   }
 }
 
