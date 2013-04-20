@@ -121,6 +121,26 @@ function TokenString(str) {
         }
       } else {
         /* Group */
+        var startIndex = 1;
+        var i = 1;
+        var depth = 1;
+        while (depth > 0) {
+          if (i == str.length) {
+            throw "Mismatched parentheses";
+          }
+          if (str[i] == '(') depth++;
+          else if (str[i] == ')') depth--;
+          i++;
+        }
+        var finishIndex = i;
+        childStr = str.substring(startIndex, finishIndex-1);
+        if (childStr.length > 0) {
+          this.child = new TokenString(childStr);
+        }
+        nextStr = str.substring(finishIndex);
+        if (nextStr.length > 0) {
+          this.next = new TokenString(nextStr);
+        }
       }
       break;
     case ')':
