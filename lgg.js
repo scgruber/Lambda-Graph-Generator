@@ -23,7 +23,7 @@ $(function() {
   }
 
   for (var i = drawings.length-1; i >= 0; i--) {
-    drawings[i].clear('#dddddd');
+    drawings[i].display();
   }
 });
 
@@ -32,6 +32,9 @@ $(function() {
  * Drawing object *
  ******************/
 function Drawing(i, canvas, textfield) {
+  this.width = canvas.width();
+  this.height = canvas.height();
+
   textfield.width(canvas.width() - (parseInt(textfield.css('padding'))*2));
 
   this.context = canvas[0].getContext('2d');
@@ -41,6 +44,14 @@ function Drawing(i, canvas, textfield) {
   this.regenerateTokens(textfield.val());
 
   this.textfield.keyup(this.makeTextChangeHandler(i));
+}
+
+Drawing.prototype.display = function() {
+  this.clear('#ffffff');
+
+  this.context.translate(this.width/2, this.height/2);
+
+  this.root.display(this.context);
 }
 
 Drawing.prototype.clear = function(hexcolor) {
