@@ -36,6 +36,7 @@ function Drawing(i, canvas, textfield) {
 
   this.context = canvas[0].getContext('2d');
   this.textfield = textfield;
+  this.root = new Group(null);
 
   this.regenerateTokens(textfield.val());
 
@@ -183,4 +184,22 @@ TokenString.prototype.makeSingleton = function() {
     next: null,
     child: this.child
   }
+}
+
+
+/****************
+ * Group object *
+ ****************/
+function Group(parent) {
+  this.parent = parent;
+
+  this.x = 0;
+  this.y = 0;
+  this.r = 10;
+}
+
+Group.prototype.display = function(ctx) {
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
+  ctx.stroke();
 }
