@@ -82,75 +82,74 @@ function TokenString(str) {
     throw "Empty string passed to constructor!";
   }
 
-  switch(str[0]) {
-    case '(':
-      /* Enter into a group */
-      if (str.length == 1) {
-        throw "Unbounded group!"
-      } else if (str[1] == '\\') {
-        /* Lambda abstraction */
-        var i = 2;
-        if (i >= str.length) {
-          throw "Abstraction has no arguments";
-        }
-        while (str[i] != '.') {
-          this.val += str[i];
-          i++;
-          if (i == str.length) {
-            throw "Abstraction has no dot";
-          }
-        }
-        var startIndex = ++i;
-        var depth = 1;
-        while (depth > 0) {
-          if (i == str.length) {
-            throw "Mismatched parentheses";
-          }
-          if (str[i] == '(') depth++;
-          else if (str[i] == ')') depth--;
-          i++;
-        }
-        var finishIndex = i;
-        childStr = str.substring(startIndex, finishIndex-1);
-        if (childStr.length > 0) {
-          this.child = new TokenString(childStr);
-        }
-        nextStr = str.substring(finishIndex);
-        if (nextStr.length > 0) {
-          this.next = new TokenString(nextStr);
-        }
-      } else {
-        /* Group */
-        var startIndex = 1;
-        var i = 1;
-        var depth = 1;
-        while (depth > 0) {
-          if (i == str.length) {
-            throw "Mismatched parentheses";
-          }
-          if (str[i] == '(') depth++;
-          else if (str[i] == ')') depth--;
-          i++;
-        }
-        var finishIndex = i;
-        childStr = str.substring(startIndex, finishIndex-1);
-        if (childStr.length > 0) {
-          this.child = new TokenString(childStr);
-        }
-        nextStr = str.substring(finishIndex);
-        if (nextStr.length > 0) {
-          this.next = new TokenString(nextStr);
+  if (str[0] == '(') {
+    /* Enter into a group */
+    if (str.length == 1) {
+      throw "Unbounded group!"
+    } else if (str[1] == '\\') {
+      /* Lambda abstraction */
+      var i = 2;
+      if (i >= str.length) {
+        throw "Abstraction has no arguments";
+      }
+      while (str[i] != '.') {
+        this.val += str[i];
+        i++;
+        if (i == str.length) {
+          throw "Abstraction has no dot";
         }
       }
-      break;
-    case ')':
-    case '\\':
-    case '.':
-      /* This should not happen so throw */
-      throw "Unexpected symbol at start of string!";
-      break;
-    default:
-      break;
+      var startIndex = ++i;
+      var depth = 1;
+      while (depth > 0) {
+        if (i == str.length) {
+          throw "Mismatched parentheses";
+        }
+        if (str[i] == '(') depth++;
+        else if (str[i] == ')') depth--;
+        i++;
+      }
+      var finishIndex = i;
+      childStr = str.substring(startIndex, finishIndex-1);
+      if (childStr.length > 0) {
+        this.child = new TokenString(childStr);
+      }
+      nextStr = str.substring(finishIndex);
+      if (nextStr.length > 0) {
+        this.next = new TokenString(nextStr);
+      }
+    } else {
+      /* Group */
+      var startIndex = 1;
+      var i = 1;
+      var depth = 1;
+      while (depth > 0) {
+        if (i == str.length) {
+          throw "Mismatched parentheses";
+        }
+        if (str[i] == '(') depth++;
+        else if (str[i] == ')') depth--;
+        i++;
+      }
+      var finishIndex = i;
+      childStr = str.substring(startIndex, finishIndex-1);
+      if (childStr.length > 0) {
+        this.child = new TokenString(childStr);
+      }
+      nextStr = str.substring(finishIndex);
+      if (nextStr.length > 0) {
+        this.next = new TokenString(nextStr);
+      }
+    }
+  } else if ((65 <= str.charCodeAt(0) && str.charCodeAt(0) <= 90) || (97 <= str.charCodeAt(0) && str.charCodeAt(0) <= 122)) {
+    /* Some valid character found */
+    this.val = str[0];
+    nextStr = str.substring(1);
+    if (nextStr.length > 0) {
+      this.next = new TokenString(nextStr);
+    }
+  } else {
+    throw "Unexpected symbol at start of string!";
   }
 
 }
