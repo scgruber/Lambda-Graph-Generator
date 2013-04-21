@@ -84,7 +84,7 @@ Drawing.prototype.makeTextChangeHandler = function(i) {
 Drawing.prototype.regenerateTokens = function(str) {
   try {
     var newTokens = new TokenString();
-    newTokens.parseString(str);
+    newTokens.parseString(str.replace(/ /g,''));
     this.tokens = newTokens;
     this.setValid();
   } catch(err) {
