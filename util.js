@@ -1,3 +1,9 @@
+/*
+ * util.js
+ * Lambda Graph Generator
+ * Sam Gruber <sam@scgruber.com>
+ */
+
 /* Test if a string is alphabetic */
 function isAlpha(str) {
   return !/[^a-zA-Z]/.test(str);
