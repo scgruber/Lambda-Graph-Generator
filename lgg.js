@@ -250,10 +250,29 @@ TokenString.prototype.produceDrawing = function(grp) {
   while (nextChild != null) {
     if (nextChild.child == null) {
       /* Application node */
+      var origin = grp.getInput(nextChild.val[0]);
+      var output;
+      if (appTo != null) {
+        output = appTo;
+      } else {
+        output = grp.output;
+      }
+      appTo = grp.addMerge(origin, null, output);
+
       nextChild = nextChild.next;
     } else {
       /* Group node */
-      nextChild = nextChild.next;
+      var output;
+      if (appTo != null) {
+        output = appTo;
+      } else {
+        output = this.output;
+      }
+      var ingrp = new Group(grp);
+      ingrp.output.output = output;
+
+      nextChild = nextChild.produceDrawing(ingrp);
+      grp.addGroup(ingrp);
     }
   }
 
@@ -287,6 +306,44 @@ Group.prototype.clean = function() {
   this.output = new Output(this.r);
 }
 
+Group.prototype.addMerge = function(fn, arg, output) {
+  /* By default, set the output to the group's output */
+  var m = new Merge(fn, arg, output);
+
+  /* Fix inputs */
+  if (fn.output) {
+    fn.output = m;
+  }
+  if (arg != null && arg.output) {
+    arg.output = m;
+  }
+
+  this.interior.push(m);
+
+  return m;
+}
+
+Group.prototype.addGroup = function(grp) {
+  this.groups.push(grp);
+}
+
+Group.prototype.getInput = function(arg) {
+  for (var i = this.inputs.length-1; i >= 0; i--) {
+    if (this.inputs[i].arg == arg) {
+      /* Found the input we were looking for */
+      return this.inputs[i];
+    }
+  }
+
+  if (this.parent != null) {
+    /* Look higher in the ancestry */
+    return this.parent.getInput(arg);
+  } else {
+    /* Couldn't find it */
+    return null;
+  }
+}
+
 Group.prototype.setPos = function(x, y) {
   var dx = x - this.x;
   var dy = y - this.y;
@@ -297,6 +354,12 @@ Group.prototype.setPos = function(x, y) {
   this.output.y += dy;
   for (var i = this.inputs.length-1; i >= 0; i--) {
     this.inputs[i].setPos(this.inputs[i].x + dx, this.inputs[i].y + dy);
+  }
+  for (var i = this.interior.length-1; i >= 0; i--) {
+    this.interior[i].setPos(this.interior[i].x + dx, this.interior[i].y + dy);
+  }
+  for (var i = this.groups.length-1; i >= 0; i--) {
+    this.groups[i].setPos(this.groups[i].x + dx, this.groups[i].y + dy);
   }
 }
 
@@ -335,6 +398,14 @@ Group.prototype.display = function(ctx) {
   ctx.beginPath();
   ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
   ctx.stroke();
+
+  for (var i = 0; i < this.groups.length; i++) {
+    this.groups[i].display(ctx);
+  }
+
+  for (var i = 0; i < this.interior.length; i++) {
+    this.interior[i].display(ctx);
+  }
 
   for (var i = 0; i < this.inputs.length; i++) {
     this.inputs[i].display(ctx);
@@ -397,6 +468,51 @@ Input.prototype.setPos = function(x, y) {
   this.y += dy;
   if (this.group != null) {
     this.group.setPos(this.group.x + dx, this.group.y + dy);
+  }
+}
+
+
+/****************
+ * Merge object *
+ ****************/
+function Merge(fn, arg, output) {
+  this.x = 0;
+  this.y = 0;
+
+  this.fn = fn;
+  this.arg = arg;
+  this.output = output;
+}
+
+Merge.prototype.strokeColor = '#000000';
+
+Merge.prototype.setPos = function(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+Merge.prototype.display = function(ctx) {
+  ctx.strokeStyle = this.strokeColor;
+
+  /* Draw to fn */
+  if (this.fn != null) {
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.fn.x, this.fn.y);
+    ctx.stroke();
+  }
+
+  /* Draw to arg */
+  if (this.arg != null) {
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.arg.x, this.arg.y);
+    ctx.stroke();
+  }
+
+  /* Draw to output */
+  if (this.output != null) {
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.output.x, this.output.y);
+    ctx.stroke();
   }
 }
 
