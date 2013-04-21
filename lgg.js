@@ -287,14 +287,44 @@ Group.prototype.clean = function() {
   this.output = new Output(this.r);
 }
 
+Group.prototype.setPos = function(x, y) {
+  var dx = x - this.x;
+  var dy = y - this.y;
+
+  this.x += dx;
+  this.y += dy;
+  this.output.x += dx;
+  this.output.y += dy;
+  for (var i = this.inputs.length-1; i >= 0; i--) {
+    this.inputs[i].setPos(this.inputs[i].x + dx, this.inputs[i].y + dy);
+  }
+}
+
 Group.prototype.update = function() {
-  this.r = 25;
+  /* Update children */
+  for (var i = this.inputs.length-1; i >= 0; i--) {
+    this.inputs[i].update();
+  }
+
+  /* Update group radius */
+  var defaultRadius = 25;
+
+  var totalInputDiams = (this.inputs.length == 1) ? 0 : 0;
+  for (var i = this.inputs.length-1; i >= 0; i--) {
+    totalInputDiams += 2 * this.inputs[i].r;
+  }
+  /* The total size of the inputs cannot be more than (PI/2) * radius */
+  var radiusByInputs = totalInputDiams/(Math.PI/2);
+
+  this.r = Math.max(defaultRadius, radiusByInputs);
 
   /* Update inputs */
-  for (var i = 0; i < this.inputs.length; i++) {
-    var coords = sphericalToCartesian(this.r, (i+1)*Math.PI/(this.inputs.length+1));
-    this.inputs[i].x = this.x + coords.x;
-    this.inputs[i].y = this.y - coords.y;
+  var angularPos = 0;
+  for (var i = this.inputs.length-1; i >= 0; i--) {
+    angularPos += (this.inputs[i].r/totalInputDiams) * Math.PI;
+    var coords = sphericalToCartesian(this.r, angularPos);
+    this.inputs[i].setPos(this.x + coords.x, this.y - coords.y);
+    angularPos += (this.inputs[i].r/totalInputDiams) * Math.PI;
   }
 
   /* Update output */
@@ -329,6 +359,13 @@ function Input(arg) {
 Input.prototype.fillColor = '#ffffff';
 Input.prototype.strokeColor = '#000000';
 
+Input.prototype.update = function() {
+  if (this.group != null) {
+    this.group.update();
+    this.r = this.group.r + 10;
+  }
+}
+
 Input.prototype.display = function(ctx) {
   ctx.fillStyle = this.fillColor;
   ctx.beginPath();
@@ -340,11 +377,27 @@ Input.prototype.display = function(ctx) {
   ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
   ctx.stroke();
 
-  ctx.strokeText(this.arg, this.x, this.y);
+  if (this.group == null) {
+    ctx.strokeText(this.arg, this.x, this.y);
+  } else {
+    this.group.display(ctx);
+  }
 }
 
 Input.prototype.setGroup = function(grp) {
   this.group = grp;
+  this.r = grp.r + 10;
+}
+
+Input.prototype.setPos = function(x, y) {
+  var dx = x - this.x;
+  var dy = y - this.y;
+
+  this.x += dx;
+  this.y += dy;
+  if (this.group != null) {
+    this.group.setPos(this.group.x + dx, this.group.y + dy);
+  }
 }
 
 
