@@ -8,13 +8,44 @@
     <link href="style.css" rel="stylesheet" type="text/css"/>
   </head>
   <body>
-    <canvas id="lgg-canvas-0" width="300" height="200"></canvas>
-    <br/>
-    <input id="lgg-text-0" type="text" value="(\x.x)"></input>
-    <br/>
-    <br/>
-    <canvas id="lgg-canvas-1" width="300" height="200"></canvas>
-    <br/>
-    <input id="lgg-text-1" type="text" value="(\xyz.xz(yz))"></input>
+    <header>
+      <h1>The Lambda Calculus</h1>
+      <h2>An Illustrated Primer</h2>
+    </header>
+    <article>
+      <h2>Arithmetic in Lambda Calculus</h2>
+      <section>
+        <div class="content">
+          <p>There are several possible ways to define the natural numbers in lambda calculus, but by far the most common are the Church numerals, which can be defined as follows:</p>
+          <blockquote>
+            0 := \fx.x<br/>
+            1 := \fx.f x<br/>
+            2 := \fx.f (f x)<br/>
+            3 := \fx.f (f (f x))<br/>
+          </blockquote>
+          <p>The Church numeral n is a function that takes a function f as argument and returns the n-th composition of f, i.e. the function f composed with itself n times. Such repeated compositions (of a single function f) obey the laws of exponents, which is why these numerals can be used for arithmetic.</p>
+        </div>
+        <div class="drawing">
+          <canvas id="lgg-canvas-0" width="300" height="200"></canvas>
+          <br/>
+          <input id="lgg-text-0" type="text" value="(\fx.f (f x))"></input>
+        </div>
+        <div class="clear"></div>
+      </section>
+      <section>
+        <div class="content">
+          We can define a successor function, which takes a number n and returns n + 1 by adding an additional application of f:
+          <blockquote>
+            SUCC := \nfx.f (n f x)<br/>
+          </blockquote>
+        </div>
+        <div class="drawing">
+          <canvas id="lgg-canvas-1" width="300" height="200"></canvas>
+          <br/>
+          <input id="lgg-text-1" type="text" value="(\nfx.f (n f x))"></input>
+        </div>
+        <div class="clear"></div>
+      </section>
+    </article>
   </body>
 </html>
