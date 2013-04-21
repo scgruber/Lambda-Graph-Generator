@@ -35,7 +35,7 @@ Group.prototype.addMerge = function(fn, arg, output) {
   var m = new Merge(fn, arg, output);
 
   /* Fix inputs */
-  if (fn.output) {
+  if (fn != null && fn.output) {
     fn.output = m;
   }
   if (arg != null && arg.output) {
@@ -94,6 +94,9 @@ Group.prototype.update = function() {
   }
   for (var i = this.groups.length-1; i >= 0; i--) {
     this.groups[i].update();
+  }
+  for (var i = this.interior.length-1; i >= 0; i--) {
+    this.interior[i].update();
   }
 
   /* Update group radius */
@@ -229,6 +232,11 @@ Merge.prototype.setPos = function(x, y) {
   this.y = y;
 }
 
+Merge.prototype.update = function() {
+  this.x = (this.fn.x/2) + (this.output.x/2);
+  this.y = (this.fn.y/2) + (this.output.y/2);
+}
+
 Merge.prototype.display = function(ctx) {
   ctx.strokeStyle = this.strokeColor;
 
@@ -261,11 +269,20 @@ Merge.prototype.display = function(ctx) {
 function Output(radius) {
   this.x = 0;
   this.y = radius;
+  this.output = null;
 }
 
 Output.prototype.fillColor = '#000000';
+Output.prototype.strokeColor = '#000000';
 
 Output.prototype.display = function(ctx) {
+  if (this.output != null) {
+    ctx.strokeStyle = this.strokeColor;
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.output.x, this.output.y);
+    ctx.stroke();
+  }
+
   ctx.fillStyle = this.fillColor;
   ctx.beginPath();
   ctx.arc(this.x, this.y, 5, 0, 2*Math.PI);
