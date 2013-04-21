@@ -92,18 +92,32 @@ Group.prototype.update = function() {
   for (var i = this.inputs.length-1; i >= 0; i--) {
     this.inputs[i].update();
   }
+  for (var i = this.groups.length-1; i >= 0; i--) {
+    this.groups[i].update();
+  }
 
   /* Update group radius */
   var defaultRadius = 25;
 
-  var totalInputDiams = (this.inputs.length == 1) ? 0 : 0;
+  /* Calculate best radius to separate inputs */
+  var totalInputDiams = 0;
   for (var i = this.inputs.length-1; i >= 0; i--) {
     totalInputDiams += 2 * this.inputs[i].r;
   }
   /* The total size of the inputs cannot be more than (PI/2) * radius */
-  var radiusByInputs = totalInputDiams/(Math.PI/2);
+  var radiusByInputs = totalInputDiams/(Math.PI/2) + 10;
 
-  this.r = Math.max(defaultRadius, radiusByInputs);
+  /* Calculate best radius to contain interior groups */
+  var radiusByGroups = 0;
+  for (var i = this.groups.length-1; i >= 0; i--) {
+    var centerDist = dist(this.x, this.y, this.groups[i].x, this.groups[i].y);
+    radiusByGroups = Math.max(radiusByGroups, centerDist + this.groups[i].r);
+  }
+  radiusByGroups += 10;
+
+  this.r = Math.max(defaultRadius, Math.max(radiusByInputs, radiusByGroups));
+
+
 
   /* Update inputs */
   var angularPos = 0;
