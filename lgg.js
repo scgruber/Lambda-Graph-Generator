@@ -292,8 +292,9 @@ Group.prototype.update = function() {
 
   /* Update inputs */
   for (var i = 0; i < this.inputs.length; i++) {
-    this.inputs[i].x = this.x + (this.r*Math.cos((i+1)*Math.PI/(i+2)));
-    this.inputs[i].y = this.y - (this.r*Math.sin((i+1)*Math.PI/(i+2)));
+    var coords = sphericalToCartesian(this.r, (i+1)*Math.PI/(this.inputs.length+1));
+    this.inputs[i].x = this.x + coords.x;
+    this.inputs[i].y = this.y - coords.y;
   }
 
   /* Update output */
@@ -338,6 +339,8 @@ Input.prototype.display = function(ctx) {
   ctx.beginPath();
   ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
   ctx.stroke();
+
+  ctx.strokeText(this.arg, this.x, this.y);
 }
 
 Input.prototype.setGroup = function(grp) {
