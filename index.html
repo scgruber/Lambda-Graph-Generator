@@ -18,10 +18,10 @@
         <div class="content">
           <p>There are several possible ways to define the natural numbers in lambda calculus, but by far the most common are the Church numerals, which can be defined as follows:</p>
           <blockquote>
-            0 := \fx.x<br/>
-            1 := \fx.f x<br/>
-            2 := \fx.f (f x)<br/>
-            3 := \fx.f (f (f x))<br/>
+            0 := (\fx.x)<br/>
+            1 := (\fx.f x)<br/>
+            2 := (\fx.f (f x))<br/>
+            3 := (\fx.f (f (f x)))<br/>
           </blockquote>
           <p>The Church numeral n is a function that takes a function f as argument and returns the n-th composition of f, i.e. the function f composed with itself n times. Such repeated compositions (of a single function f) obey the laws of exponents, which is why these numerals can be used for arithmetic.</p>
         </div>
@@ -36,7 +36,7 @@
         <div class="content">
           We can define a successor function, which takes a number n and returns n + 1 by adding an additional application of f:
           <blockquote>
-            SUCC := \nfx.f (n f x)<br/>
+            SUCC := (\nfx.f (n f x))<br/>
           </blockquote>
         </div>
         <div class="drawing">
