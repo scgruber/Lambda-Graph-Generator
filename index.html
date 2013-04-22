@@ -20,6 +20,24 @@
       <h2>An Illustrated Primer</h2>
     </header>
     <article>
+      <h2>Preface</h2>
+      <section>
+        <div class="content">
+          <p>This document is based upon the text of the <a href="http://en.wikipedia.org/wiki/Lambda_calculus">Lambda calculus</a> article on English Wikipedia. It is made available under the <a href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution Share-Alike 3.0 License</a>.</p>
+          <p>In this document you will see diagrams, such as the one to the right, which show the structure of a Lambda Calculus expression visually. These diagrams can be changed by typing in the text field below them. These diagrams are constructed based on a few rules:</p>
+          <ol>
+            <li>Large circles surround Lambda Abstractions or groups. These correspond to expressions enclosed within parentheses in the text representation.</li>
+            <li>Small circles which lie on the boundary of larger circles denote inputs to Lambda Abstractions. These may be unbound and empty, or contain another expression which is bound to the variable.</li>
+            <li>Lines track the path of execution inside the expression. Where two lines meet, an application occurs, where the continuous line accepts the terminated line as an argument.</li>
+          </ol>
+        </div>
+        <div class="drawing">
+          <canvas id="lgg-canvas-0" width="300" height="200"></canvas>
+          <br/>
+          <input id="lgg-text-0" type="text" value="(\xyz.xz(yz))(\a.a)"></input>
+        </div>
+        <div class="clear"></div>
+      </section>
       <h2>Arithmetic in Lambda Calculus</h2>
       <section>
         <div class="content">
@@ -33,23 +51,23 @@
           <p>The Church numeral n is a function that takes a function f as argument and returns the n-th composition of f, i.e. the function f composed with itself n times. Such repeated compositions (of a single function f) obey the laws of exponents, which is why these numerals can be used for arithmetic.</p>
         </div>
         <div class="drawing">
-          <canvas id="lgg-canvas-0" width="300" height="200"></canvas>
+          <canvas id="lgg-canvas-1" width="300" height="200"></canvas>
           <br/>
-          <input id="lgg-text-0" type="text" value="(\fx.f (f x))"></input>
+          <input id="lgg-text-1" type="text" value="(\fx.f (f x))"></input>
         </div>
         <div class="clear"></div>
       </section>
       <section>
         <div class="content">
-          We can define a successor function, which takes a number n and returns n + 1 by adding an additional application of f:
+          <p>We can define a successor function, which takes a number n and returns n + 1 by adding an additional application of f:</p>
           <blockquote>
             SUCC := (\nfx.f (n f x))<br/>
           </blockquote>
         </div>
         <div class="drawing">
-          <canvas id="lgg-canvas-1" width="300" height="200"></canvas>
+          <canvas id="lgg-canvas-2" width="300" height="200"></canvas>
           <br/>
-          <input id="lgg-text-1" type="text" value="(\nfx.f (n f x))"></input>
+          <input id="lgg-text-2" type="text" value="(\nfx.f (n f x))"></input>
         </div>
         <div class="clear"></div>
       </section>

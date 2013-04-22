@@ -14,6 +14,11 @@ input {
 header {
   width: 100%;
   text-align: center;
+  margin-bottom: 50px;
+}
+
+h1 {
+  margin-bottom: -10px;
 }
 
 article {
@@ -27,11 +32,20 @@ section {
   background: #dfdfdf;
 }
 
+a {
+  color: #007fff;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #1f3fff;
+}
+
 .content {
   float: left;
   min-height: 235px;
-  width: 610px;
-  padding: 5px;
+  width: 600px;
+  padding: 10px;
   background: #ffffff;
 }
 
