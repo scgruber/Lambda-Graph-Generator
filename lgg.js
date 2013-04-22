@@ -38,19 +38,26 @@ function Drawing(i, canvas, textfield) {
 
   textfield.width(canvas.width() - (parseInt(textfield.css('padding'))*2));
 
+  this.canvas = canvas;
   this.context = canvas[0].getContext('2d');
   this.textfield = textfield;
   this.root = new Group(null);
+  this.palette = new ToolPalette(0, 0);
 
   this.regenerateTokens(textfield.val());
 
   this.textfield.keyup(this.makeTextChangeHandler(i));
+  this.canvas.mousemove(this.makeMouseMoveHandler(i));
+  this.canvas.click(this.makeMouseClickHandler(i));
 }
 
 Drawing.prototype.exec = function() {
   resetTransform(this.context);
   this.update();
   this.display();
+  resetTransform(this.context);
+  this.palette.display(this.context);
+
 }
 
 Drawing.prototype.update = function() {
@@ -78,6 +85,19 @@ Drawing.prototype.makeTextChangeHandler = function(i) {
     drawings[i].regenerateTokens(this.value);
     drawings[i].tokens.produceDrawing(drawings[i].root);
     drawings[i].exec();
+  }
+}
+
+Drawing.prototype.makeMouseMoveHandler = function(i) {
+  return function(eventObject) {
+    drawings[i].palette.update(eventObject.pageX - drawings[i].canvas.offset().left, eventObject.pageY - drawings[i].canvas.offset().top);
+    drawings[i].palette.display(drawings[i].context);
+  }
+}
+
+Drawing.prototype.makeMouseClickHandler = function(i) {
+  return function(eventObject) {
+    drawings[i].palette.selectButton();
   }
 }
 
