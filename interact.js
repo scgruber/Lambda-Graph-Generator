@@ -25,6 +25,8 @@ ToolPalette.prototype.buttonWidth = 40;
 ToolPalette.prototype.update = function(x, y) {
   if (this.isOnPalette(x, y)) {
     this.detectRollover(y);
+  } else {
+    this.overButton = this.ButtonNone;
   }
 }
 
@@ -58,4 +60,12 @@ ToolPalette.prototype.selectButton = function() {
 
 ToolPalette.prototype.deselectButton = function() {
   this.activeButton = this.ButtonNone;
+}
+
+ToolPalette.prototype.drawButton = function(x, y, i) {
+  switch (i) {
+    default:
+      /* Do nothing */
+      break;
+  }
 }
