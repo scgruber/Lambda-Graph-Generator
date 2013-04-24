@@ -11,6 +11,7 @@ function Group(parent) {
   this.x = 0;
   this.y = 0;
   this.r = 25;
+  this.outerRadius = 25;
 
   this.parent = parent;
   this.inputs = [];
@@ -23,6 +24,7 @@ Group.prototype.clean = function() {
   this.x = 0;
   this.y = 0;
   this.r = 25;
+  this.outerRadius = 25;
   
   this.inputs = [];
   this.interior = [];
@@ -74,8 +76,8 @@ Group.prototype.setPos = function(x, y) {
 
   this.x += dx;
   this.y += dy;
-  this.output.x += dx;
-  this.output.y += dy;
+  this.output.x = this.x;
+  this.output.y = this.y + this.r;
   for (var i = this.inputs.length-1; i >= 0; i--) {
     this.inputs[i].setPos(this.inputs[i].x + dx, this.inputs[i].y + dy);
   }
@@ -89,8 +91,10 @@ Group.prototype.setPos = function(x, y) {
 
 Group.prototype.update = function() {
   /* Update children */
+  var maxInputRadius = 0;
   for (var i = this.inputs.length-1; i >= 0; i--) {
-    this.inputs[i].update();
+    var ir = this.inputs[i].update();
+    maxInputRadius = Math.max(maxInputRadius, ir);
   }
   for (var i = this.groups.length-1; i >= 0; i--) {
     this.groups[i].update();
@@ -119,7 +123,7 @@ Group.prototype.update = function() {
   radiusByGroups += 10;
 
   this.r = Math.max(defaultRadius, Math.max(radiusByInputs, radiusByGroups));
-
+  this.outerRadius = this.r + maxInputRadius;
 
 
   /* Update inputs */
@@ -136,9 +140,18 @@ Group.prototype.update = function() {
 }
 
 Group.prototype.display = function(ctx) {
-  ctx.beginPath();
-  ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
-  ctx.stroke();
+  if (this.inputs.length == 0) {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r+1, 0, 2*Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r-1, 0, 2*Math.PI);
+    ctx.stroke();
+  }
 
   for (var i = 0; i < this.groups.length; i++) {
     this.groups[i].display(ctx);
@@ -174,8 +187,9 @@ Input.prototype.strokeColor = '#000000';
 Input.prototype.update = function() {
   if (this.group != null) {
     this.group.update();
-    this.r = this.group.r + 10;
+    this.r = this.group.outerRadius + 10;
   }
+  return this.r;
 }
 
 Input.prototype.display = function(ctx) {
@@ -242,6 +256,7 @@ Merge.prototype.display = function(ctx) {
 
   /* Draw to fn */
   if (this.fn != null) {
+    ctx.beginPath();
     ctx.moveTo(this.x, this.y);
     ctx.lineTo(this.fn.x, this.fn.y);
     ctx.stroke();
@@ -249,6 +264,7 @@ Merge.prototype.display = function(ctx) {
 
   /* Draw to arg */
   if (this.arg != null) {
+    ctx.beginPath();
     ctx.moveTo(this.x, this.y);
     ctx.lineTo(this.arg.x, this.arg.y);
     ctx.stroke();
@@ -256,6 +272,7 @@ Merge.prototype.display = function(ctx) {
 
   /* Draw to output */
   if (this.output != null) {
+    ctx.beginPath();
     ctx.moveTo(this.x, this.y);
     ctx.lineTo(this.output.x, this.output.y);
     ctx.stroke();

@@ -56,6 +56,7 @@ Drawing.prototype.exec = function() {
   this.update();
   this.display();
   resetTransform(this.context);
+  this.palette.update();
   this.palette.display(this.context);
 
 }
@@ -68,9 +69,11 @@ Drawing.prototype.display = function() {
   this.clear('#ffffff');
 
   this.context.translate(this.width/2, this.height/2);
+  this.context.scale(1/this.root.r)
 
   this.root.display(this.context);
 
+  this.context.scale(this.root.r);
   this.context.translate(-this.width/2, -this.height/2);
 }
 
@@ -90,8 +93,9 @@ Drawing.prototype.makeTextChangeHandler = function(i) {
 
 Drawing.prototype.makeMouseMoveHandler = function(i) {
   return function(eventObject) {
-    drawings[i].palette.update(eventObject.pageX - drawings[i].canvas.offset().left, eventObject.pageY - drawings[i].canvas.offset().top);
-    drawings[i].palette.display(drawings[i].context);
+    var mouseX = eventObject.pageX - drawings[i].canvas.offset().left;
+    var mouseY = eventObject.pageY - drawings[i].canvas.offset().top;
+    drawings[i].exec();
   }
 }
 
