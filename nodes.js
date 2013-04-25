@@ -144,10 +144,10 @@ Group.prototype.display = function(ctx) {
     this.output.displayHidden(ctx);
   } else {
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.r+1, 0, 2*Math.PI);
+    ctx.arc(this.x, this.y, this.r+1.5, 0, 2*Math.PI);
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.r-1, 0, 2*Math.PI);
+    ctx.arc(this.x, this.y, this.r-1.5, 0, 2*Math.PI);
     ctx.stroke();
     this.output.display(ctx);
   }

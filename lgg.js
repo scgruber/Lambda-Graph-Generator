@@ -35,6 +35,7 @@ $(function() {
 function Drawing(i, canvas, textfield) {
   this.width = canvas.width();
   this.height = canvas.height();
+  this.viewScale = 1;
 
   textfield.width(canvas.width() - (parseInt(textfield.css('padding'))*2));
 
@@ -63,17 +64,22 @@ Drawing.prototype.exec = function() {
 
 Drawing.prototype.update = function() {
   this.root.update();
+
+  var trueBound = Math.min(this.width, this.height) / (2 * this.viewScale);
+  if (this.root.outerRadius > trueBound) {
+    this.viewScale *= 0.9;
+  }
 }
 
 Drawing.prototype.display = function() {
   this.clear('#ffffff');
 
   this.context.translate(this.width/2, this.height/2);
-  //this.context.scale(1/this.root.r)
+  this.context.scale(this.viewScale, this.viewScale);
 
   this.root.display(this.context);
 
-  //this.context.scale(this.root.r);
+  this.context.scale(1/this.viewScale, 1/this.viewScale);
   this.context.translate(-this.width/2, -this.height/2);
 }
 
@@ -296,7 +302,7 @@ TokenString.prototype.produceDrawing = function(grp) {
         output = grp.output;
       }
       ingrp.output.output = output;
-      
+
       grp.addGroup(ingrp);
     }
   }
