@@ -56,8 +56,8 @@ Drawing.prototype.exec = function() {
   this.update();
   this.display();
   resetTransform(this.context);
-  this.palette.update();
-  this.palette.display(this.context);
+  //this.palette.update();
+  //this.palette.display(this.context);
 
 }
 
@@ -69,11 +69,11 @@ Drawing.prototype.display = function() {
   this.clear('#ffffff');
 
   this.context.translate(this.width/2, this.height/2);
-  this.context.scale(1/this.root.r)
+  //this.context.scale(1/this.root.r)
 
   this.root.display(this.context);
 
-  this.context.scale(this.root.r);
+  //this.context.scale(this.root.r);
   this.context.translate(-this.width/2, -this.height/2);
 }
 
@@ -285,17 +285,18 @@ TokenString.prototype.produceDrawing = function(grp) {
 
       nextChild = nextChild.next;
     } else {
+      var ingrp = new Group(grp);
+      nextChild = nextChild.produceDrawing(ingrp);
+
       /* Group node */
       var output;
       if (appTo != null) {
         output = appTo;
       } else {
-        output = this.output;
+        output = grp.output;
       }
-      var ingrp = new Group(grp);
       ingrp.output.output = output;
-
-      nextChild = nextChild.produceDrawing(ingrp);
+      
       grp.addGroup(ingrp);
     }
   }

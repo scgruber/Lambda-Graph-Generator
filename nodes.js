@@ -141,9 +141,7 @@ Group.prototype.update = function() {
 
 Group.prototype.display = function(ctx) {
   if (this.inputs.length == 0) {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
-    ctx.stroke();
+    this.output.displayHidden(ctx);
   } else {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.r+1, 0, 2*Math.PI);
@@ -151,6 +149,7 @@ Group.prototype.display = function(ctx) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.r-1, 0, 2*Math.PI);
     ctx.stroke();
+    this.output.display(ctx);
   }
 
   for (var i = 0; i < this.groups.length; i++) {
@@ -164,8 +163,6 @@ Group.prototype.display = function(ctx) {
   for (var i = 0; i < this.inputs.length; i++) {
     this.inputs[i].display(ctx);
   }
-
-  this.output.display(ctx);
 }
 
 
@@ -204,7 +201,7 @@ Input.prototype.display = function(ctx) {
   ctx.stroke();
 
   if (this.group == null) {
-    ctx.strokeText(this.arg, this.x, this.y);
+    ctx.strokeText(this.arg, this.x-2, this.y+2);
   } else {
     this.group.display(ctx);
   }
@@ -304,4 +301,13 @@ Output.prototype.display = function(ctx) {
   ctx.beginPath();
   ctx.arc(this.x, this.y, 5, 0, 2*Math.PI);
   ctx.fill();
+}
+
+Output.prototype.displayHidden = function(ctx) {
+  if (this.output != null) {
+    ctx.strokeStyle = this.strokeColor;
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.output.x, this.output.y);
+    ctx.stroke();
+  }
 }
