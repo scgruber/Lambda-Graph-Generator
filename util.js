@@ -4,6 +4,14 @@
  * Sam Gruber <sam@scgruber.com>
  */
 
+/* Animation shim */
+window.requestAnimFrame = (function(callback) {
+  return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
+  function(callback) {
+    window.setTimeout(callback, 1000 / 60);
+  };
+})();
+
 /* Test if a string is alphabetic */
 function isAlpha(str) {
   return !/[^a-zA-Z]/.test(str);

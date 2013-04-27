@@ -24,9 +24,20 @@ $(function() {
 
   for (var i = drawings.length-1; i >= 0; i--) {
     drawings[i].tokens.produceDrawing(drawings[i].root);
+  }
+
+  animate();
+});
+
+function animate() {
+  for (var i = drawings.length-1; i >= 0; i--) {
     drawings[i].exec();
   }
-});
+
+  requestAnimFrame(function() {
+    animate();
+  });
+}
 
 
 /******************
@@ -48,8 +59,8 @@ function Drawing(i, canvas, textfield) {
   this.regenerateTokens(textfield.val());
 
   this.textfield.keyup(this.makeTextChangeHandler(i));
-  this.canvas.mousemove(this.makeMouseMoveHandler(i));
-  this.canvas.click(this.makeMouseClickHandler(i));
+  //this.canvas.mousemove(this.makeMouseMoveHandler(i));
+  //this.canvas.click(this.makeMouseClickHandler(i));
 }
 
 Drawing.prototype.exec = function() {
@@ -65,9 +76,10 @@ Drawing.prototype.exec = function() {
 Drawing.prototype.update = function() {
   this.root.update();
 
-  var trueBound = Math.min(this.width, this.height) / (2 * this.viewScale);
-  if (this.root.outerRadius > trueBound) {
-    this.viewScale *= 0.9;
+  var trueBound = Math.min(this.width, this.height) / (2.5 * this.viewScale);
+  if (this.root.outerRadius != trueBound) {
+    var targetScale = trueBound/this.root.outerRadius;
+    this.viewScale = (this.viewScale + targetScale) / 2;
   }
 }
 
