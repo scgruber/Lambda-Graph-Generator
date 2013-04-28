@@ -176,15 +176,22 @@ Group.prototype.update = function() {
     var bigAcc = 0;
 
     for (var j = this.inputs[i].output.length-1; j >= 0; j--) {
-      curAcc += Math.sqrt(Math.pow(curPos.x - this.inputs[i].output[j].x, 2) + Math.pow(curPos.y - this.inputs[i].output[j].y, 2));
-      smallAcc += Math.sqrt(Math.pow(smallPos.x - this.inputs[i].output[j].x, 2) + Math.pow(smallPos.y - this.inputs[i].output[j].y, 2));
-      bigAcc += Math.sqrt(Math.pow(bigPos.x - this.inputs[i].output[j].x, 2) + Math.pow(bigPos.y - this.inputs[i].output[j].y, 2));
+      curAcc += dist(curPos.x, curPos.y, this.inputs[i].output[j].x, this.inputs[i].output[j].y);
+      smallAcc += dist(smallPos.x, smallPos.y, this.inputs[i].output[j].x, this.inputs[i].output[j].y);
+      bigAcc += dist(bigPos.x, bigPos.y, this.inputs[i].output[j].x, this.inputs[i].output[j].y);
+    }
+    for (var j = this.inputs.length-1; j >= 0; j--) {
+      if (i != j) {
+        curAcc += 2*(dist(curPos.x, curPos.y, this.inputs[j].x, this.inputs[j].y) - this.inputs[i].r);
+        smallAcc += 2*(dist(smallPos.x, smallPos.y, this.inputs[j].x, this.inputs[j].y) - this.inputs[i].r);
+        bigAcc += 2*(dist(bigPos.x, bigPos.y, this.inputs[j].x, this.inputs[j].y) - this.inputs[i].r);
+      }
     }
 
     if (smallAcc > curAcc && this.inputs[i].angle > (Math.PI)) {
       this.inputs[i].angle -= 0.01;
       this.inputs[i].setPos(smallPos.x, smallPos.y);
-    } else if (bigAcc > curAcc && this.inputs[i].angle > (2*Math.PI)) {
+    } else if (bigAcc > curAcc && this.inputs[i].angle < (2*Math.PI)) {
       this.inputs[i].angle += 0.01;
       this.inputs[i].setPos(bigPos.x, bigPos.y);
     } else {
@@ -285,6 +292,7 @@ Input.prototype.setPos = function(x, y) {
 function Merge(fn, input, output) {
   this.x = 0;
   this.y = 0;
+  this.r = 5;
   this.posRatio = 0.5;
 
   this.fn = fn;
@@ -365,6 +373,8 @@ Merge.prototype.display = function(ctx) {
 function Output(radius) {
   this.x = 0;
   this.y = radius;
+  this.r = 5;
+
   this.output = null;
   this.input = null;
 }
@@ -382,6 +392,6 @@ Output.prototype.display = function(ctx) {
 
   ctx.fillStyle = this.fillColor;
   ctx.beginPath();
-  ctx.arc(this.x, this.y, 5, 0, 2*Math.PI);
+  ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
   ctx.fill();
 }

@@ -48,6 +48,7 @@ function Drawing(i, canvas, textfield) {
   this.width = canvas.width();
   this.height = canvas.height();
   this.viewScale = 1;
+  this.valid = true;
 
   textfield.width(canvas.width() - (parseInt(textfield.css('padding'))*2));
 
@@ -105,9 +106,10 @@ Drawing.prototype.clear = function(hexcolor) {
 Drawing.prototype.makeTextChangeHandler = function(i) {
   return function(eventObject) {
     drawings[i].regenerateTokens(this.value);
-    drawings[i].tokens.produceDrawing(drawings[i].root);
-    drawings[i].root.removeEmptySubGroups();
-    drawings[i].exec();
+    if (drawings[i].valid) {
+      drawings[i].tokens.produceDrawing(drawings[i].root);
+      drawings[i].root.removeEmptySubGroups();
+    }
   }
 }
 
@@ -115,7 +117,6 @@ Drawing.prototype.makeMouseMoveHandler = function(i) {
   return function(eventObject) {
     var mouseX = eventObject.pageX - drawings[i].canvas.offset().left;
     var mouseY = eventObject.pageY - drawings[i].canvas.offset().top;
-    drawings[i].exec();
   }
 }
 
@@ -139,10 +140,12 @@ Drawing.prototype.regenerateTokens = function(str) {
 
 Drawing.prototype.setValid = function() {
   this.textfield.css('background', '#adfdad');
+  this.valid = true;
 }
 
 Drawing.prototype.setInvalid = function() {
   this.textfield.css('background', '#fdadad');
+  this.valid = false;
 }
 
 
