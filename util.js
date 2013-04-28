@@ -60,25 +60,16 @@ function Vec2D(x, y) {
 }
 
 Vec2D.prototype.copy = function(v) {
-  return {
-    x: v.x,
-    y: v.y
-  }
+  return new Vec2D(v.x, v.y);
 }
 
 /* Arithmetic operators */
 Vec2D.prototype.add = function(v, w) {
-  return {
-    x: v.x + w.x,
-    y: v.y + w.y
-  };
+  return new Vec2D(v.x + w.x, v.y + w.y);
 }
 
 Vec2D.prototype.sub = function(v, w) {
-  return {
-    x: v.x - w.x,
-    y: v.y - w.y
-  }
+  return new Vec2D(v.x - w.x, v.y - w.y);
 }
 
 Vec2D.prototype.dot = function(v, w) {
@@ -86,9 +77,14 @@ Vec2D.prototype.dot = function(v, w) {
 }
 
 Vec2D.prototype.mult = function(s, v) {
-  return {
-    x: s * v.x,
-    y: s * v.y
-  }
+  return new Vec2D(s * v.x, s * v.y);
+}
+
+Vec2D.prototype.norm = function(v) {
+  return Math.sqrt((v.x*v.x) + (v.y*v.y))
+}
+
+Vec2D.prototype.dist = function(v, w) {
+  return Vec2D.norm(Vec2D.sub(v, w));
 }
 
