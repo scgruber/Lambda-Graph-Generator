@@ -108,7 +108,7 @@ Group.prototype.removeEmptySubGroups = function() {
       for (var j = this.groups[i].interior.length-1; j >= 0; j--) {
         this.interior.push(this.groups[i].interior[j]);
       }
-      
+
       /* Delete the group */
       this.groups[i] = null;
     }
@@ -175,17 +175,13 @@ Group.prototype.update = function() {
 }
 
 Group.prototype.display = function(ctx) {
-  if (this.inputs.length == 0) {
-    this.output.displayHidden(ctx);
-  } else {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.r+1.5, 0, 2*Math.PI);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.r-1.5, 0, 2*Math.PI);
-    ctx.stroke();
-    this.output.display(ctx);
-  }
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, this.r+1.5, 0, 2*Math.PI);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, this.r-1.5, 0, 2*Math.PI);
+  ctx.stroke();
+  this.output.display(ctx);
 
   for (var i = 0; i < this.groups.length; i++) {
     this.groups[i].display(ctx);
@@ -353,13 +349,4 @@ Output.prototype.display = function(ctx) {
   ctx.beginPath();
   ctx.arc(this.x, this.y, 5, 0, 2*Math.PI);
   ctx.fill();
-}
-
-Output.prototype.displayHidden = function(ctx) {
-  if (this.output != null) {
-    ctx.strokeStyle = this.strokeColor;
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.output.x, this.output.y);
-    ctx.stroke();
-  }
 }
