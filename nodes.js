@@ -230,6 +230,7 @@ Input.prototype.setPos = function(x, y) {
 function Merge(fn, arg, output) {
   this.x = 0;
   this.y = 0;
+  this.posRatio = 0.5;
 
   this.fn = fn;
   this.arg = arg;
@@ -244,8 +245,22 @@ Merge.prototype.setPos = function(x, y) {
 }
 
 Merge.prototype.update = function() {
-  this.x = (this.fn.x/2) + (this.output.x/2);
-  this.y = (this.fn.y/2) + (this.output.y/2);
+  var mainAngle = Math.atan((this.fn.y-this.output.y)/(this.fn.x-this.output.x));
+  var branchAngle = 10;
+  if (this.arg != null) {
+    branchAngle = Math.atan((this.y-this.arg.y)/(this.x-this.arg.x));
+  }
+
+  if (branchAngle != 10) {
+    if ((mainAngle-branchAngle) < (-Math.PI/6)) {
+      this.posRatio -= 0.01;
+    } else if ((mainAngle-branchAngle) > Math.PI/6) {
+      this.posRatio += 0.01;
+    }
+  }
+
+  this.x = (this.fn.x*(1-this.posRatio)) + (this.output.x*this.posRatio);
+  this.y = (this.fn.y*(1-this.posRatio)) + (this.output.y*this.posRatio);
 }
 
 Merge.prototype.display = function(ctx) {
