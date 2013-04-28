@@ -53,10 +53,8 @@ function nearestPoint(p1, p2, x) {
  * Vec2D Object *
  ****************/
 function Vec2D(x, y) {
-  return {
-    x: x,
-    y: y
-  }
+  this.x = x;
+  this.y = y;
 }
 
 Vec2D.prototype.copy = function(v) {
