@@ -166,12 +166,30 @@ Group.prototype.update = function() {
 
 
   /* Update inputs */
-  var angularPos = 0;
   for (var i = this.inputs.length-1; i >= 0; i--) {
-    angularPos += (this.inputs[i].r/totalInputDiams) * Math.PI;
-    var coords = sphericalToCartesian(this.r, angularPos);
-    this.inputs[i].setPos(this.x + coords.x, this.y - coords.y);
-    angularPos += (this.inputs[i].r/totalInputDiams) * Math.PI;
+    curPos = sphericalToCartesian(this.r, this.inputs[i].angle, this.x, this.y);
+    smallPos = sphericalToCartesian(this.r, this.inputs[i].angle - 0.01, this.x, this.y);
+    bigPos = sphericalToCartesian(this.r, this.inputs[i].angle + 0.01, this.x, this.y);
+
+    var curAcc = 0;
+    var smallAcc = 0;
+    var bigAcc = 0;
+
+    for (var j = this.inputs[i].output.length-1; j >= 0; j--) {
+      curAcc += Math.sqrt(Math.pow(curPos.x - this.inputs[i].output[j].x, 2) + Math.pow(curPos.y - this.inputs[i].output[j].y, 2));
+      smallAcc += Math.sqrt(Math.pow(smallPos.x - this.inputs[i].output[j].x, 2) + Math.pow(smallPos.y - this.inputs[i].output[j].y, 2));
+      bigAcc += Math.sqrt(Math.pow(bigPos.x - this.inputs[i].output[j].x, 2) + Math.pow(bigPos.y - this.inputs[i].output[j].y, 2));
+    }
+
+    if (smallAcc > curAcc && this.inputs[i].angle > (Math.PI)) {
+      this.inputs[i].angle -= 0.01;
+      this.inputs[i].setPos(smallPos.x, smallPos.y);
+    } else if (bigAcc > curAcc && this.inputs[i].angle > (2*Math.PI)) {
+      this.inputs[i].angle += 0.01;
+      this.inputs[i].setPos(bigPos.x, bigPos.y);
+    } else {
+      this.inputs[i].setPos(curPos.x, curPos.y);
+    }
   }
 
   /* Update output */
@@ -208,6 +226,7 @@ function Input(arg) {
   this.x = 0;
   this.y = 0;
   this.r = 10;
+  this.angle = 3*Math.PI/2;
 
   this.arg = arg;
   this.group = null;

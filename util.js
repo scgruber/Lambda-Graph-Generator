@@ -23,10 +23,10 @@ function resetTransform(ctx) {
 }
 
 /* Convert spherical coords to cartesian */
-function sphericalToCartesian(r, theta) {
+function sphericalToCartesian(r, theta, cx, cy) {
   return {
-    x: r * Math.cos(theta),
-    y: r * Math.sin(theta)
+    x: cx + (r * Math.cos(theta)),
+    y: cy + (r * Math.sin(theta))
   }
 }
 
