@@ -38,11 +38,15 @@ Group.prototype.addMerge = function(fn, arg, output) {
   output.input = m;
 
   /* Fix inputs */
-  if (fn != null && fn.output) {
+  if (fn instanceof Merge || fn instanceof Output) {
     fn.output = m;
+  } else if (fn instanceof Input) {
+    fn.output.push(m);
   }
-  if (arg != null && arg.output) {
+  if (arg instanceof Merge || arg instanceof Output) {
     arg.output = m;
+  } else if (arg instanceof Input) {
+    arg.output.push(m);
   }
 
   this.interior.push(m);
@@ -207,6 +211,7 @@ function Input(arg) {
 
   this.arg = arg;
   this.group = null;
+  this.output = [];
 }
 
 Input.prototype.fillColor = '#ffffff';
@@ -276,23 +281,34 @@ Merge.prototype.setPos = function(x, y) {
 }
 
 Merge.prototype.update = function() {
-  var mainAngle = Math.atan((this.fn.y-this.output.y)/(this.fn.x-this.output.x));
-  var branchAngle = 10;
+  curX = (this.fn.x*(1-this.posRatio)) + (this.output.x*this.posRatio);
+  curY = (this.fn.y*(1-this.posRatio)) + (this.output.y*this.posRatio);
   if (this.input != null) {
-    branchAngle = Math.atan((this.y-this.input.y)/(this.x-this.input.x));
-  }
+    smallX = (this.fn.x*(1-(this.posRatio-0.01))) + (this.output.x*(this.posRatio-0.01));
+    smallY = (this.fn.y*(1-(this.posRatio-0.01))) + (this.output.y*(this.posRatio-0.01));
+    bigX = (this.fn.x*(1-(this.posRatio+0.01))) + (this.output.x*(this.posRatio+0.01));
+    bigY = (this.fn.y*(1-(this.posRatio+0.01))) + (this.output.y*(this.posRatio+0.01));
 
-  if (branchAngle != 10) {
-    if ((mainAngle-branchAngle) < (-Math.PI/6) && this.posRatio > 0.25) {
+    curDP = Math.abs(((this.fn.x-this.output.x)*(this.input.x-curX)) + ((this.fn.y-this.output.y)*(this.input.y-curY)));
+    smallDP = Math.abs(((this.fn.x-this.output.x)*(this.input.x-smallX)) + ((this.fn.y-this.output.y)*(this.input.y-smallY)));
+    bigDP = Math.abs(((this.fn.x-this.output.x)*(this.input.x-bigX)) + ((this.fn.y-this.output.y)*(this.input.y-bigY)));
+
+    if (smallDP < curDP && this.posRatio > 0.25) {
       this.posRatio -= 0.01;
-    } else if ((mainAngle-branchAngle) > (Math.PI/6) && this.posRatio < 0.75) {
+      this.x = smallX;
+      this.y = smallY;
+    } else if (bigDP < curDP && this.posRatio < 0.75) {
       this.posRatio += 0.01;
+      this.x = bigX;
+      this.y = bigY;
+    } else {
+      this.x = curX;
+      this.y = curY;
     }
+  } else {
+    this.x = curX;
+    this.y = curY;
   }
-
-
-  this.x = (this.fn.x*(1-this.posRatio)) + (this.output.x*this.posRatio);
-  this.y = (this.fn.y*(1-this.posRatio)) + (this.output.y*this.posRatio);
 }
 
 Merge.prototype.display = function(ctx) {
