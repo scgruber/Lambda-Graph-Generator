@@ -35,6 +35,7 @@ Group.prototype.clean = function() {
 Group.prototype.addMerge = function(fn, arg, output) {
   /* By default, set the output to the group's output */
   var m = new Merge(fn, arg, output);
+  output.input = m;
 
   /* Fix inputs */
   if (fn != null && fn.output) {
@@ -87,6 +88,40 @@ Group.prototype.setPos = function(x, y) {
   for (var i = this.groups.length-1; i >= 0; i--) {
     this.groups[i].setPos(this.groups[i].x + dx, this.groups[i].y + dy);
   }
+}
+
+Group.prototype.removeEmptySubGroups = function() {
+  /* Call for all of the inputs */
+  for (var i = this.inputs.length-1; i >= 0; i--) {
+    if (this.inputs[i].group != null) {
+      this.inputs[i].group.removeEmptySubGroups();
+    }
+  }
+
+  /* Call for all of the groups inside */
+  /* Then remove each of those if they are empty */
+  for (var i = this.groups.length-1; i >= 0; i--) {
+    this.groups[i].removeEmptySubGroups();
+    if (this.groups[i].inputs.length == 0) {
+      this.groups[i].output.input.output = this.groups[i].output.output;
+
+      for (var j = this.groups[i].interior.length-1; j >= 0; j--) {
+        this.interior.push(this.groups[i].interior[j]);
+      }
+      
+      /* Delete the group */
+      this.groups[i] = null;
+    }
+  }
+
+  /* Clean up the groups list */
+  var newgroups = [];
+  for (var i = this.groups.length-1; i >= 0; i--) {
+    if (this.groups[i] != null) {
+      newgroups.push(this.groups[i]);
+    }
+  }
+  this.groups = newgroups;
 }
 
 Group.prototype.update = function() {
@@ -227,13 +262,13 @@ Input.prototype.setPos = function(x, y) {
 /****************
  * Merge object *
  ****************/
-function Merge(fn, arg, output) {
+function Merge(fn, input, output) {
   this.x = 0;
   this.y = 0;
   this.posRatio = 0.5;
 
   this.fn = fn;
-  this.arg = arg;
+  this.input = input;
   this.output = output;
 }
 
@@ -247,17 +282,18 @@ Merge.prototype.setPos = function(x, y) {
 Merge.prototype.update = function() {
   var mainAngle = Math.atan((this.fn.y-this.output.y)/(this.fn.x-this.output.x));
   var branchAngle = 10;
-  if (this.arg != null) {
-    branchAngle = Math.atan((this.y-this.arg.y)/(this.x-this.arg.x));
+  if (this.input != null) {
+    branchAngle = Math.atan((this.y-this.input.y)/(this.x-this.input.x));
   }
 
   if (branchAngle != 10) {
-    if ((mainAngle-branchAngle) < (-Math.PI/6)) {
+    if ((mainAngle-branchAngle) < (-Math.PI/6) && this.posRatio > 0.25) {
       this.posRatio -= 0.01;
-    } else if ((mainAngle-branchAngle) > Math.PI/6) {
+    } else if ((mainAngle-branchAngle) > (Math.PI/6) && this.posRatio < 0.75) {
       this.posRatio += 0.01;
     }
   }
+
 
   this.x = (this.fn.x*(1-this.posRatio)) + (this.output.x*this.posRatio);
   this.y = (this.fn.y*(1-this.posRatio)) + (this.output.y*this.posRatio);
@@ -274,11 +310,11 @@ Merge.prototype.display = function(ctx) {
     ctx.stroke();
   }
 
-  /* Draw to arg */
-  if (this.arg != null) {
+  /* Draw to input */
+  if (this.input != null) {
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.arg.x, this.arg.y);
+    ctx.lineTo(this.input.x, this.input.y);
     ctx.stroke();
   }
 
@@ -299,10 +335,11 @@ function Output(radius) {
   this.x = 0;
   this.y = radius;
   this.output = null;
+  this.input = null;
 }
 
 Output.prototype.fillColor = '#000000';
-Output.prototype.strokeColor = '#000000';
+Output.prototype.strokeColor = '#ff0000';
 
 Output.prototype.display = function(ctx) {
   if (this.output != null) {

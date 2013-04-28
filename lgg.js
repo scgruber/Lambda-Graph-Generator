@@ -24,6 +24,7 @@ $(function() {
 
   for (var i = drawings.length-1; i >= 0; i--) {
     drawings[i].tokens.produceDrawing(drawings[i].root);
+    drawings[i].root.removeEmptySubGroups();
   }
 
   animate();
@@ -105,6 +106,7 @@ Drawing.prototype.makeTextChangeHandler = function(i) {
   return function(eventObject) {
     drawings[i].regenerateTokens(this.value);
     drawings[i].tokens.produceDrawing(drawings[i].root);
+    drawings[i].root.removeEmptySubGroups();
     drawings[i].exec();
   }
 }
@@ -310,8 +312,10 @@ TokenString.prototype.produceDrawing = function(grp) {
       var output;
       if (appTo != null) {
         output = appTo;
+        appTo.arg = ingrp.output;
       } else {
         output = grp.output;
+        grp.output.input = ingrp.output;
       }
       ingrp.output.output = output;
 
