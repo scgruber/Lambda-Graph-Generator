@@ -38,6 +38,9 @@ function dist(x1, y1, x2, y2) {
 /* Calculate nearest point on p1-p2 to x */
 function nearestPoint(p1, p2, x) {
   var dir = Vec2D.sub(p2, p1);
+  if (Vec2D.norm(dir) == 0) {
+    return Vec2D.copy(p1);
+  }
   var t = Vec2D.dot(dir, Vec2D.sub(x, p1)) / Vec2D.dot(dir, dir);
   if (t < 0) {
     /* Ideal point is before start */
@@ -57,32 +60,68 @@ function Vec2D(x, y) {
   this.y = y;
 }
 
-Vec2D.prototype.copy = function(v) {
+Vec2D.copy = function(v) {
   return new Vec2D(v.x, v.y);
 }
 
+Vec2D.fromSpherical = function(r, theta, center) {
+  return new Vec2D(center.x + (r * Math.cos(theta)), center.y + (r * Math.sin(theta)));
+}
+
 /* Arithmetic operators */
-Vec2D.prototype.add = function(v, w) {
+Vec2D.add = function(v, w) {
   return new Vec2D(v.x + w.x, v.y + w.y);
 }
 
-Vec2D.prototype.sub = function(v, w) {
+Vec2D.sub = function(v, w) {
   return new Vec2D(v.x - w.x, v.y - w.y);
 }
 
-Vec2D.prototype.dot = function(v, w) {
+Vec2D.dot = function(v, w) {
   return (v.x * w.x) + (v.y * w.y);
 }
 
-Vec2D.prototype.mult = function(s, v) {
+Vec2D.mult = function(s, v) {
   return new Vec2D(s * v.x, s * v.y);
 }
 
-Vec2D.prototype.norm = function(v) {
+Vec2D.norm = function(v) {
   return Math.sqrt((v.x*v.x) + (v.y*v.y))
 }
 
-Vec2D.prototype.dist = function(v, w) {
+Vec2D.dist = function(v, w) {
   return Vec2D.norm(Vec2D.sub(v, w));
 }
 
+Vec2D.unit = function(v) {
+  if (Vec2D.norm(v) == 0) {
+    return v;
+  }
+  return new Vec2D(v.x / Vec2D.norm(v), v.y / Vec2D.norm(v));
+}
+
+Vec2D.lerp = function (v, w, s) {
+  return Vec2D.add(v, Vec2D.mult(s, Vec2D.sub(w, v)));
+}
+
+/*******************
+ * Drawing methods *
+ *******************/
+function drawStrokeCircle(ctx, center, r) {
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, r, 0, 2*Math.PI);
+  ctx.stroke();
+}
+
+function drawFillCircle(ctx, center, r) {
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, r, 0, 2*Math.PI);
+  ctx.fill();
+}
+
+function drawLine(ctx, start, end) {
+  ctx.beginPath();
+  ctx.moveTo(start.x, start.y);
+  ctx.lineTo(end.x, end.y);
+  ctx.stroke();
+}
