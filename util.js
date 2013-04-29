@@ -52,6 +52,10 @@ function nearestPoint(p1, p2, x) {
   }
 }
 
+function sign(x) {
+  return x < 0 ? -1 : 1;
+}
+
 /****************
  * Vec2D Object *
  ****************/
@@ -131,9 +135,9 @@ function drawLine(ctx, start, end) {
 }
 
 /* Draw a bezier curve with relative control vectors */
-function drawBezier(ctx, start, cv1, cv2, end) {
+function drawBezier(ctx, start, cp, end) {
   ctx.beginPath();
   ctx.moveTo(start.x, start.y);
-  ctx.bezierCurveTo(start.x+cv1.x, start.y+cv1.y, end.x+cv2.x, end.y+cv2.y, end.x, end.y);
+  ctx.quadraticCurveTo(cp.x, cp.y, end.x, end.y);
   ctx.stroke();
 }
