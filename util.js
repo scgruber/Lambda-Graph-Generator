@@ -100,8 +100,12 @@ Vec2D.unit = function(v) {
   return new Vec2D(v.x / Vec2D.norm(v), v.y / Vec2D.norm(v));
 }
 
-Vec2D.lerp = function (v, w, s) {
+Vec2D.lerp = function(v, w, s) {
   return Vec2D.add(v, Vec2D.mult(s, Vec2D.sub(w, v)));
+}
+
+Vec2D.swap = function(v) {
+  return new Vec2D(v.y, v.x);
 }
 
 /*******************
@@ -123,5 +127,13 @@ function drawLine(ctx, start, end) {
   ctx.beginPath();
   ctx.moveTo(start.x, start.y);
   ctx.lineTo(end.x, end.y);
+  ctx.stroke();
+}
+
+/* Draw a bezier curve with relative control vectors */
+function drawBezier(ctx, start, cv1, cv2, end) {
+  ctx.beginPath();
+  ctx.moveTo(start.x, start.y);
+  ctx.bezierCurveTo(start.x+cv1.x, start.y+cv1.y, end.x+cv2.x, end.y+cv2.y, end.x, end.y);
   ctx.stroke();
 }
