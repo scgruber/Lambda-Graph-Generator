@@ -8,8 +8,7 @@
  * Group object *
  ****************/
 function Group(parent) {
-  this.x = 0;
-  this.y = 0;
+  this.pos = new Vec2D(0, 0);
   this.r = 25;
   this.outerRadius = 25;
 
@@ -21,8 +20,7 @@ function Group(parent) {
 }
 
 Group.prototype.clean = function() {
-  this.x = 0;
-  this.y = 0;
+  this.pos = new Vec2D(0, 0);
   this.r = 25;
   this.outerRadius = 25;
   
@@ -76,21 +74,18 @@ Group.prototype.getInput = function(arg) {
 }
 
 Group.prototype.setPos = function(x, y) {
-  var dx = x - this.x;
-  var dy = y - this.y;
+  var delta = new Vec2D(x - this.pos.x, y - this.pos.y);
 
-  this.x += dx;
-  this.y += dy;
-  this.output.x = this.x;
-  this.output.y = this.y + this.r;
+  this.pos = Vec2D.add(this.pos, delta);
+  this.output.pos = new Vec2D(this.pos.x, this.pos.y + this.r);
   for (var i = this.inputs.length-1; i >= 0; i--) {
-    this.inputs[i].setPos(this.inputs[i].x + dx, this.inputs[i].y + dy);
+    this.inputs[i].setPos(this.inputs[i].pos.x + delta.x, this.inputs[i].pos.y + delta.y);
   }
   for (var i = this.interior.length-1; i >= 0; i--) {
-    this.interior[i].setPos(this.interior[i].x + dx, this.interior[i].y + dy);
+    this.interior[i].setPos(this.interior[i].pos.x + delta.x, this.interior[i].pos.y + delta.y);
   }
   for (var i = this.groups.length-1; i >= 0; i--) {
-    this.groups[i].setPos(this.groups[i].x + dx, this.groups[i].y + dy);
+    this.groups[i].setPos(this.groups[i].pos.x + delta.x, this.groups[i].pos.y + delta.y);
   }
 }
 
@@ -156,7 +151,7 @@ Group.prototype.update = function() {
   /* Calculate best radius to contain interior groups */
   var radiusByGroups = 0;
   for (var i = this.groups.length-1; i >= 0; i--) {
-    var centerDist = dist(this.x, this.y, this.groups[i].x, this.groups[i].y);
+    var centerDist = Vec2D.dist(this.pos, this.groups[i].pos);
     radiusByGroups = Math.max(radiusByGroups, centerDist + this.groups[i].r);
   }
   radiusByGroups += 10;
@@ -167,24 +162,24 @@ Group.prototype.update = function() {
 
   /* Update inputs */
   for (var i = this.inputs.length-1; i >= 0; i--) {
-    curPos = sphericalToCartesian(this.r, this.inputs[i].angle, this.x, this.y);
-    smallPos = sphericalToCartesian(this.r, this.inputs[i].angle - 0.01, this.x, this.y);
-    bigPos = sphericalToCartesian(this.r, this.inputs[i].angle + 0.01, this.x, this.y);
+    curPos = Vec2D.fromSpherical(this.r, this.inputs[i].angle, this.pos);
+    smallPos = Vec2D.fromSpherical(this.r, this.inputs[i].angle - 0.01, this.pos);
+    bigPos = Vec2D.fromSpherical(this.r, this.inputs[i].angle + 0.01, this.pos);
 
     var curAcc = 0;
     var smallAcc = 0;
     var bigAcc = 0;
 
     for (var j = this.inputs[i].output.length-1; j >= 0; j--) {
-      curAcc += dist(curPos.x, curPos.y, this.inputs[i].output[j].x, this.inputs[i].output[j].y);
-      smallAcc += dist(smallPos.x, smallPos.y, this.inputs[i].output[j].x, this.inputs[i].output[j].y);
-      bigAcc += dist(bigPos.x, bigPos.y, this.inputs[i].output[j].x, this.inputs[i].output[j].y);
+      curAcc += Vec2D.dist(curPos, this.inputs[i].output[j].pos);
+      smallAcc += Vec2D.dist(smallPos, this.inputs[i].output[j].pos);
+      bigAcc += Vec2D.dist(bigPos, this.inputs[i].output[j].pos);
     }
     for (var j = this.inputs.length-1; j >= 0; j--) {
       if (i != j) {
-        curAcc += 2*(dist(curPos.x, curPos.y, this.inputs[j].x, this.inputs[j].y) - this.inputs[i].r);
-        smallAcc += 2*(dist(smallPos.x, smallPos.y, this.inputs[j].x, this.inputs[j].y) - this.inputs[i].r);
-        bigAcc += 2*(dist(bigPos.x, bigPos.y, this.inputs[j].x, this.inputs[j].y) - this.inputs[i].r);
+        curAcc += Math.pow(Vec2D.dist(curPos, this.inputs[j].pos), 2) - this.inputs[i].r;
+        smallAcc += Math.pow(Vec2D.dist(smallPos, this.inputs[j].pos), 2) - this.inputs[i].r;
+        bigAcc += Math.pow(Vec2D.dist(bigPos, this.inputs[j].pos), 2) - this.inputs[i].r;
       }
     }
 
@@ -200,16 +195,12 @@ Group.prototype.update = function() {
   }
 
   /* Update output */
-  this.output.y = this.r;
+  this.output.pos = new Vec2D(0, this.r);
 }
 
 Group.prototype.display = function(ctx) {
-  ctx.beginPath();
-  ctx.arc(this.x, this.y, this.r+1.5, 0, 2*Math.PI);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(this.x, this.y, this.r-1.5, 0, 2*Math.PI);
-  ctx.stroke();
+  drawStrokeCircle(ctx, this.pos, this.r + 1.5);
+  drawStrokeCircle(ctx, this.pos, this.r - 1.5);
   this.output.display(ctx);
 
   for (var i = 0; i < this.groups.length; i++) {
@@ -230,8 +221,7 @@ Group.prototype.display = function(ctx) {
  * Input object *
  ****************/
 function Input(arg) {
-  this.x = 0;
-  this.y = 0;
+  this.pos = new Vec2D(0, 0);
   this.r = 10;
   this.angle = 3*Math.PI/2;
 
@@ -253,17 +243,13 @@ Input.prototype.update = function() {
 
 Input.prototype.display = function(ctx) {
   ctx.fillStyle = this.fillColor;
-  ctx.beginPath();
-  ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
-  ctx.fill();
+  drawFillCircle(ctx, this.pos, this.r);
 
   ctx.strokeStyle = this.strokeColor;
-  ctx.beginPath();
-  ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
-  ctx.stroke();
+  drawStrokeCircle(ctx, this.pos, this.r);
 
   if (this.group == null) {
-    ctx.strokeText(this.arg, this.x-2, this.y+2);
+    ctx.strokeText(this.arg, this.pos.x-2, this.pos.y+2);
   } else {
     this.group.display(ctx);
   }
@@ -275,13 +261,11 @@ Input.prototype.setGroup = function(grp) {
 }
 
 Input.prototype.setPos = function(x, y) {
-  var dx = x - this.x;
-  var dy = y - this.y;
+  var delta = new Vec2D(x - this.pos.x, y - this.pos.y);
 
-  this.x += dx;
-  this.y += dy;
+  this.pos = Vec2D.add(this.pos, delta);
   if (this.group != null) {
-    this.group.setPos(this.group.x + dx, this.group.y + dy);
+    this.group.setPos(this.group.pos.x + delta.x, this.group.pos.y + delta.y);
   }
 }
 
@@ -290,9 +274,8 @@ Input.prototype.setPos = function(x, y) {
  * Merge object *
  ****************/
 function Merge(fn, input, output) {
-  this.x = 0;
-  this.y = 0;
-  this.r = 5;
+  this.pos = new Vec2D(0, 0);
+  this.r = 10;
   this.posRatio = 0.5;
 
   this.fn = fn;
@@ -303,67 +286,48 @@ function Merge(fn, input, output) {
 Merge.prototype.strokeColor = '#000000';
 
 Merge.prototype.setPos = function(x, y) {
-  this.x = x;
-  this.y = y;
+  this.pos = new Vec2D(x, y);
 }
 
 Merge.prototype.update = function() {
-  curX = (this.fn.x*(1-this.posRatio)) + (this.output.x*this.posRatio);
-  curY = (this.fn.y*(1-this.posRatio)) + (this.output.y*this.posRatio);
-  if (this.input != null) {
-    smallX = (this.fn.x*(1-(this.posRatio-0.01))) + (this.output.x*(this.posRatio-0.01));
-    smallY = (this.fn.y*(1-(this.posRatio-0.01))) + (this.output.y*(this.posRatio-0.01));
-    bigX = (this.fn.x*(1-(this.posRatio+0.01))) + (this.output.x*(this.posRatio+0.01));
-    bigY = (this.fn.y*(1-(this.posRatio+0.01))) + (this.output.y*(this.posRatio+0.01));
-
-    curDP = Math.abs(((this.fn.x-this.output.x)*(this.input.x-curX)) + ((this.fn.y-this.output.y)*(this.input.y-curY)));
-    smallDP = Math.abs(((this.fn.x-this.output.x)*(this.input.x-smallX)) + ((this.fn.y-this.output.y)*(this.input.y-smallY)));
-    bigDP = Math.abs(((this.fn.x-this.output.x)*(this.input.x-bigX)) + ((this.fn.y-this.output.y)*(this.input.y-bigY)));
-
-    if (smallDP < curDP && this.posRatio > 0.25) {
-      this.posRatio -= 0.01;
-      this.x = smallX;
-      this.y = smallY;
-    } else if (bigDP < curDP && this.posRatio < 0.75) {
-      this.posRatio += 0.01;
-      this.x = bigX;
-      this.y = bigY;
-    } else {
-      this.x = curX;
-      this.y = curY;
-    }
+  var target;
+  if (this.input == null) {
+    target = Vec2D.lerp(this.fn.pos, this.output.pos, 0.5);
   } else {
-    this.x = curX;
-    this.y = curY;
+    var mainDir = Vec2D.unit(Vec2D.sub(this.output.pos, this.fn.pos));
+    var startLimit = Vec2D.add(this.fn.pos, Vec2D.mult(this.fn.r + this.r, mainDir));
+    var endLimit = Vec2D.sub(this.output.pos, Vec2D.mult(this.output.r + this.r, mainDir));
+    
+    var centerTarget = nearestPoint(startLimit, endLimit, this.input.pos);
+    var aboveTarget = Vec2D.add(centerTarget, Vec2D.swap(mainDir));
+    var belowTarget = Vec2D.sub(centerTarget, Vec2D.swap(mainDir));
+
+    var centerAcc = 0, aboveAcc = 0, belowAcc = 0;
+
+    /* TODO: Find max sum of squared distances over all interior points */
+
+    target = centerTarget;
   }
+
+  this.pos = Vec2D.lerp(this.pos, target, 0.2);
 }
 
 Merge.prototype.display = function(ctx) {
   ctx.strokeStyle = this.strokeColor;
 
-  /* Draw to fn */
-  if (this.fn != null) {
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.fn.x, this.fn.y);
-    ctx.stroke();
-  }
+  var mainLength = Vec2D.dist(this.fn.pos, this.output.pos);
+  var mainDir = Vec2D.unit(Vec2D.sub(this.output.pos, this.fn.pos));
 
-  /* Draw to input */
-  if (this.input != null) {
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.input.x, this.input.y);
-    ctx.stroke();
-  }
+  /* Draw to fn */
+  drawBezier(ctx, this.fn.pos, Vec2D.mult(mainLength/3, Vec2D.lerp(Vec2D.swap(mainDir), mainDir, 0.5)), Vec2D.mult(-mainLength/3, mainDir), this.pos);
+  // ctx.beginPath();
+  // ctx.moveTo(this.pos.x, this.pos.y);
+  // ctx.lineTo(this.fn.pos.x, this.fn.pos.y);
+  // ctx.stroke();
 
   /* Draw to output */
-  if (this.output != null) {
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.output.x, this.output.y);
-    ctx.stroke();
-  }
+  drawBezier(ctx, this.pos, Vec2D.mult(mainLength/3, mainDir), Vec2D.mult(-mainLength/3, Vec2D.lerp(Vec2D.swap(mainDir), mainDir, 0.5)), this.output.pos);
+  // drawLine(ctx, this.pos, this.output.pos);
 }
 
 
@@ -371,8 +335,7 @@ Merge.prototype.display = function(ctx) {
  * Output object *
  *****************/
 function Output(radius) {
-  this.x = 0;
-  this.y = radius;
+  this.pos = new Vec2D(0, radius);
   this.r = 5;
 
   this.output = null;
@@ -384,14 +347,9 @@ Output.prototype.strokeColor = '#ff0000';
 
 Output.prototype.display = function(ctx) {
   if (this.output != null) {
-    ctx.strokeStyle = this.strokeColor;
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.output.x, this.output.y);
-    ctx.stroke();
+    drawLine(ctx, this.pos, this.output.pos);
   }
 
   ctx.fillStyle = this.fillColor;
-  ctx.beginPath();
-  ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
-  ctx.fill();
+  drawFillCircle(ctx, this.pos, this.r);
 }
