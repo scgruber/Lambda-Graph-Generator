@@ -249,20 +249,20 @@ TokenString.prototype.parseString = function(str) {
 
 TokenString.prototype.toString = function() {
   var out = '';
-  if (child != null) {
+  if (this.child != null) {
     out += '(';
-    if (val != '') {
+    if (this.val != '') {
       /* Abstraction */
-      out += '\\' + val + '.';
+      out += '\\' + this.val + '.';
     }
-    out += child.toString();
+    out += this.child.toString();
     out += ')';
   } else {
-    out += val;
+    out += this.val;
   }
 
-  if (next != null) {
-    out += next.toString();
+  if (this.next != null) {
+    out += this.next.toString();
   }
 
   return out;

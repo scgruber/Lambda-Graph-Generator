@@ -197,6 +197,39 @@ Group.prototype.display = function(ctx) {
   }
 }
 
+/*********************
+ * FalseGroup object *
+ *********************/
+function FalseGroup(parent, arg) {
+  this.pos = new Vec2D(0, 0);
+  this.r = 25;
+  this.outerRadius = 25;
+
+  this.parent = parent;
+  this.backtrace = parent.getInput(arg);
+}
+
+Input.prototype.fillColor = '#ffffff';
+Input.prototype.strokeColor = '#000000';
+
+FalseGroup.prototype.update = function() {};
+
+FalseGroup.prototype.display = function(ctx) {
+  ctx.fillStyle = this.fillColor;
+  ctx.strokeStyle = this.strokeColor;
+
+  drawLine(ctx, this.pos, this.backtrace.pos);
+
+  drawFillCircle(ctx, this.pos, this.r + 1.5);
+
+  drawStrokeCircle(ctx, this.pos, this.r + 1.5);
+  drawStrokeCircle(ctx, this.pos, this.r - 1.5);
+}
+
+FalseGroup.prototype.setPos = function(x, y) {
+  this.pos = new Vec2D(x, y);
+}
+
 
 /****************
  * Input object *
