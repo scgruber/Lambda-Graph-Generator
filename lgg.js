@@ -23,8 +23,10 @@ $(function() {
   }
 
   for (var i = drawings.length-1; i >= 0; i--) {
-    drawings[i].tokens.produceDrawing(drawings[i].root);
-    drawings[i].root.removeEmptySubGroups();
+    if (drawings[i].tokens) {
+      drawings[i].tokens.produceDrawing(drawings[i].root);
+      drawings[i].root.removeEmptySubGroups();
+    }
   }
 
   animate();
@@ -32,7 +34,9 @@ $(function() {
 
 function animate() {
   for (var i = drawings.length-1; i >= 0; i--) {
-    drawings[i].exec();
+    if (drawings[i].tokens) {
+      drawings[i].exec();
+    }
   }
 
   requestAnimFrame(function() {
@@ -78,10 +82,10 @@ Drawing.prototype.exec = function() {
 Drawing.prototype.update = function() {
   this.root.update();
 
-  var trueBound = Math.min(this.width, this.height) / (2.5 * this.viewScale);
+  var trueBound = Math.min(this.width, this.height) / (2 * this.viewScale);
   if (this.root.outerRadius != trueBound) {
     var targetScale = trueBound/this.root.outerRadius;
-    this.viewScale = (this.viewScale + targetScale) / 2;
+    this.viewScale = (this.viewScale + (this.viewScale * targetScale)) / 2;
   }
 }
 
@@ -282,7 +286,7 @@ TokenString.prototype.produceDrawing = function(grp) {
 
   var nextToken = this.next;
   for (var i = 0; i < this.val.length; i++) {
-    var input = new Input(this.val[i]);
+    var input = new Input(grp, this.val[i]);
     if (nextToken != null) {
       var arg = new Group(grp.parent);
       nextToken.makeSingleton().produceDrawing(arg);

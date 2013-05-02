@@ -152,7 +152,7 @@ Group.prototype.update = function() {
   var radiusByGroups = 0;
   for (var i = this.groups.length-1; i >= 0; i--) {
     var centerDist = Vec2D.dist(this.pos, this.groups[i].pos);
-    radiusByGroups = Math.max(radiusByGroups, centerDist + this.groups[i].r);
+    radiusByGroups = Math.max(radiusByGroups, centerDist + this.groups[i].outerRadius);
   }
   radiusByGroups += 10;
 
@@ -162,40 +162,21 @@ Group.prototype.update = function() {
 
   /* Update inputs */
   for (var i = this.inputs.length-1; i >= 0; i--) {
-    curPos = Vec2D.fromSpherical(this.r, this.inputs[i].angle, this.pos);
-    smallPos = Vec2D.fromSpherical(this.r, this.inputs[i].angle - 0.01, this.pos);
-    bigPos = Vec2D.fromSpherical(this.r, this.inputs[i].angle + 0.01, this.pos);
-
-    var curAcc = 0;
-    var smallAcc = 0;
-    var bigAcc = 0;
-
-    for (var j = this.inputs[i].output.length-1; j >= 0; j--) {
-      curAcc += Math.pow(Vec2D.dist(curPos, this.inputs[i].output[j].pos), 2);
-      smallAcc += Math.pow(Vec2D.dist(smallPos, this.inputs[i].output[j].pos), 2);
-      bigAcc += Math.pow(Vec2D.dist(bigPos, this.inputs[i].output[j].pos), 2);
-    }
     for (var j = this.inputs.length-1; j >= 0; j--) {
-      if (i != j) {
-        curAcc += Math.pow(Vec2D.dist(curPos, this.inputs[j].pos), 2) - this.inputs[i].r;
-        smallAcc += Math.pow(Vec2D.dist(smallPos, this.inputs[j].pos), 2) - this.inputs[i].r;
-        bigAcc += Math.pow(Vec2D.dist(bigPos, this.inputs[j].pos), 2) - this.inputs[i].r;
+      if (j != i) {
+        var diff = this.inputs[i].angle - this.inputs[j].angle;
+        if (0 < diff && diff < (Math.PI/(1.5*this.inputs.length))) {
+          this.inputs[i].angularSpeed += 0.1;
+        } else if (0 > diff && diff > -(Math.PI/(1.5*this.inputs.length))) {
+          this.inputs[i].angularSpeed -= 0.1;
+        }
       }
     }
 
-    if (smallAcc > curAcc && this.inputs[i].angle > (Math.PI)) {
-      this.inputs[i].angle -= 0.01;
-      this.inputs[i].setPos(smallPos.x, smallPos.y);
-    } else if (bigAcc > curAcc && this.inputs[i].angle < (2*Math.PI)) {
-      this.inputs[i].angle += 0.01;
-      this.inputs[i].setPos(bigPos.x, bigPos.y);
-    } else {
-      this.inputs[i].setPos(curPos.x, curPos.y);
-    }
   }
 
   /* Update output */
-  this.output.pos = new Vec2D(0, this.r);
+  this.output.pos = Vec2D.add(this.pos, new Vec2D(0, this.r));
 }
 
 Group.prototype.display = function(ctx) {
@@ -220,10 +201,12 @@ Group.prototype.display = function(ctx) {
 /****************
  * Input object *
  ****************/
-function Input(arg) {
+function Input(parent, arg) {
+  this.parent = parent;
   this.pos = new Vec2D(0, 0);
   this.r = 20;
-  this.angle = 3*Math.PI/2;
+  this.angle = (Math.PI*Math.random())+(Math.PI);
+  this.angularSpeed = 0;
 
   this.arg = arg;
   this.group = null;
@@ -232,8 +215,17 @@ function Input(arg) {
 
 Input.prototype.fillColor = '#ffffff';
 Input.prototype.strokeColor = '#000000';
+Input.prototype.frictor = 0.85;
 
 Input.prototype.update = function() {
+  /* Update angle */
+  this.angle += this.angularSpeed;
+  this.angle = Math.max(Math.min(this.angle, 2*Math.PI), Math.PI);
+  this.angularSpeed *= this.frictor;
+
+  var newPos = Vec2D.fromSpherical(this.parent.r, this.angle, this.parent.pos);
+  this.setPos(newPos.x, newPos.y);
+
   if (this.group != null) {
     this.group.update();
     this.r = this.group.outerRadius + 10;
@@ -260,6 +252,7 @@ Input.prototype.display = function(ctx) {
 Input.prototype.setGroup = function(grp) {
   this.group = grp;
   this.r = grp.r + 10;
+  this.group.setPos(this.pos.x, this.pos.y);
 }
 
 Input.prototype.setPos = function(x, y) {
@@ -296,85 +289,8 @@ Merge.prototype.update = function() {
   if (this.input == null) {
     target = Vec2D.lerp(this.fn.pos, this.output.pos, 0.5);
   } else {
-    var mainDir = Vec2D.unit(Vec2D.sub(this.output.pos, this.fn.pos));
-    var normal = Vec2D.swap(mainDir);
-    var startLimit = Vec2D.add(this.fn.pos, Vec2D.mult(this.fn.r + this.r, mainDir));
-    var endLimit = Vec2D.sub(this.output.pos, Vec2D.mult(this.output.r + this.r, mainDir));
-    var target = nearestPoint(startLimit, endLimit, this.input.pos);
-
-    var i = 1;
-    do {
-      var above = Vec2D.add(target, Vec2D.mult(10/i, normal));
-      var below = Vec2D.add(target, Vec2D.mult(-10/i, normal));
-
-      var curDist = Number.MAX_VALUE, aboveDist = Number.MAX_VALUE, belowDist = Number.MAX_VALUE;
-
-      for (var i = this.parent.interior.length-1; i >= 0; i--) {
-        if (this.parent.interior[i] != this) {
-          var curD = Vec2D.dist(target, this.parent.interior[i].pos);
-          curDist = Math.max(curDist, curD);
-          var aboveD = Vec2D.dist(target, this.parent.interior[i].pos);
-          aboveDist = Math.max(aboveDist, aboveD);
-          var belowD = Vec2D.dist(target, this.parent.interior[i].pos);
-          belowDist = Math.max(belowDist, belowD);
-        }
-      }
-      if (aboveDist > curDist && aboveDist > belowDist) {
-        target = above;
-      } else if (belowDist > curDist && belowDist > aboveDist) {
-        target = below;
-      } else {
-        break;
-      }
-      i++;
-    } while (Math.abs(curDist - aboveDist) > 0.01 && Math.abs(curDist - belowDist));
-
-    // /* Find the two closest other points */
-    // var closestDist = Number.MAX_VALUE;
-    // var closestPt = null;
-    // var prevClosestDist = Number.MAX_VALUE;
-    // var prevClosestPt = null;
-    // for (var i = this.parent.interior.length-1; i >= 0; i--) {
-    //   if (this.parent.interior[i] != this) {
-    //     var d = Vec2D.dist(this.parent.interior[i].pos, this.pos);
-    //     if (d <= closestDist) {
-    //       prevClosestDist = closestDist;
-    //       prevClosestPt = closestPt;
-    //       closestDist = d;
-    //       closestPt = this.parent.interior[i];
-    //     } else if (d <= prevClosestDist) {
-    //       prevClosestDist = d;
-    //       prevClosestPt = this.parent.interior[i];
-    //     }
-    //   }
-    // }
-    // /* Also incorporate the dist to the edge of circle */
-    // var d = this.parent.r - Vec2D.dist(this.parent.pos, this.pos);
-    // if (d <= closestDist) {
-    //   prevClosestDist = closestDist;
-    //   prevClosestPt = closestPt;
-    //   closestDist = d;
-    //   closestPt = null;
-    // } else if (d <= prevClosestDist) {
-    //   prevClosestDist = d;
-    //   prevClosestPt = null;
-    // }
-
-    // /* Now we know that closestDist at least is something */
-    // /* If there wasn't anything else in the circle, fall toward center */
-    // if (prevClosestDist == Number.MAX_VALUE) {
-    //   prevClosestDist = (2*this.parent.r) - d;
-    // }
-
-    // /* Offset away from mainDir by half the difference between the two distances */
-    // var centerPoint = nearestPoint(startLimit, endLimit, this.input.pos);
-    // var nearPt = closestPt ? closestPt.pos : this.parent.pos;
-    // var towardNearest = Vec2D.unit(Vec2D.sub(nearPt, centerPoint));
-    // var liftFactor = 0;
-    // if (d >= 0 && prevClosestDist - closestDist != 0) {
-    //   var liftFactor = 200/Math.abs(prevClosestDist - closestDist);
-    // }
-    // target = Vec2D.add(Vec2D.mult(-liftFactor, towardNearest), centerPoint);
+    target = Vec2D.lerp(this.fn.pos, this.output.pos, 0.5);
+    target = Vec2D.lerp(target, this.input.pos, 0.5);
   }
 
   this.pos = Vec2D.lerp(this.pos, target, 0.5);
