@@ -92,7 +92,8 @@ Group.prototype.setPos = function(x, y) {
 Group.prototype.removeEmptySubGroups = function() {
   /* Call for all of the inputs */
   for (var i = this.inputs.length-1; i >= 0; i--) {
-    if (this.inputs[i].group != null) {
+    /* Checks that it's not null or a FalseGroup */
+    if (this.inputs[i].group instanceof Group) {
       this.inputs[i].group.removeEmptySubGroups();
     }
   }
@@ -202,8 +203,8 @@ Group.prototype.display = function(ctx) {
  *********************/
 function FalseGroup(parent, arg) {
   this.pos = new Vec2D(0, 0);
-  this.r = 25;
-  this.outerRadius = 25;
+  this.r = 10;
+  this.outerRadius = 10;
 
   this.parent = parent;
   this.backtrace = parent.getInput(arg);

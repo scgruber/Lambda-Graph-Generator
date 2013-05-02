@@ -288,10 +288,15 @@ TokenString.prototype.produceDrawing = function(grp) {
   for (var i = 0; i < this.val.length; i++) {
     var input = new Input(grp, this.val[i]);
     if (nextToken != null) {
-      var arg = new Group(grp.parent);
-      nextToken.makeSingleton().produceDrawing(arg);
-      nextToken = nextToken.next;
+      var arg;
+      if (nextToken.child != null) {
+        arg = new Group(grp.parent);
+        nextToken.makeSingleton().produceDrawing(arg);
+      } else {
+        arg = new FalseGroup(grp.parent, nextToken.val);
+      }
       input.setGroup(arg);
+      nextToken = nextToken.next;
     }
     grp.inputs.push(input);
   }
